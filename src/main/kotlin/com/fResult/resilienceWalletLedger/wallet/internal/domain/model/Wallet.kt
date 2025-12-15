@@ -1,6 +1,9 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
-import java.util.UUID
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficient
+import io.vavr.control.Either
+import java.util.*
 
 data class Wallet(
   val id: UUID,
@@ -11,33 +14,37 @@ data class Wallet(
   val status: WalletStatus,
   val version: Long = 0,
 ) {
-  fun deposit(amount: Money): Wallet {
-    require(positiveAmount(amount)) {
-      "Invalid amount: [${amount.amount} ${amount.currency.name}]. Amount must be greater than zero."
+  fun deposit(amount: Money): Either<WalletException, Wallet> {
+    if (!amount.isPositive()) {
+      return Either.left(WalletException("Invalid deposit amount: [${amount.amount} ${amount.currency.name}]. Must be greater than zero"))
     }
-    require(amount.currency == balance.currency) {
-      "Currency mismatch! Cannot deposit ${amount.currency.name} into ${balance.currency.name}"
+
+    if (currencyMismatched(amount)) {
+      return Either.left(WalletException("Currency mismatch! Cannot deposit ${amount.currency.value} to ${balance.currency.value}"))
     }
+
     val balanceToDeposit = balance + amount
 
-    return this.copy(balance = balanceToDeposit, version = version + 1)
+    return Either.right(this.copy(balance = balanceToDeposit, version = version + 1))
   }
 
-  fun withdraw(amount: Money): Wallet {
-    require(positiveAmount(amount)) {
-      "Invalid amount: [${amount.amount} ${amount.currency.name}]. Amount must be greater than zero."
+  fun withdraw(amount: Money): Either<WalletException, Wallet> {
+    if (!amount.isPositive()) {
+      return Either.left(WalletException("Invalid withdraw amount: [${amount.amount} ${amount.currency.name}]. Must be greater than zero"))
     }
-    require(amount.currency == balance.currency) {
-      "Currency mismatch! Cannot withdraw ${amount.currency.value} from ${balance.currency.value}"
+
+    if (currencyMismatched(amount)) {
+      return Either.left(WalletException("Currency mismatch! Cannot withdraw ${amount.currency.value} from ${balance.currency.value}"))
     }
-    require(isSufficient(amount)) {
-      "Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency.value}"
+    if (isInsufficient(amount)) {
+      return Either.left(WalletInsufficient("Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency.value}"))
     }
+
     val balanceToWithdraw = balance - amount
 
-    return this.copy(balance = balanceToWithdraw, version = version + 1)
+    return Either.right(this.copy(balance = balanceToWithdraw, version = version + 1))
   }
 
-  private fun positiveAmount(money: Money): Boolean = money.amount > 0.toBigDecimal()
-  private fun isSufficient(money: Money): Boolean = balance.amount >= money.amount
+  private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
+  private fun isInsufficient(money: Money): Boolean = balance.amount < money.amount
 }
