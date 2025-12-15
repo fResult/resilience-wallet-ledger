@@ -1,0 +1,6 @@
+package com.fResult.resilienceWalletLedger.wallet.internal.domain.exception
+
+open class WalletException(
+  message: String? = null,
+  cause: Throwable? = null,
+) : RuntimeException(message, cause)
