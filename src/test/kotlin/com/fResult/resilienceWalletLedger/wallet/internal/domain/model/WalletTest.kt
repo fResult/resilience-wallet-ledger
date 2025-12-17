@@ -1,12 +1,10 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
-import io.vavr.control.Either
+import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.util.*
-import kotlin.test.assertTrue
 
 class WalletTest {
   @Test
@@ -21,6 +19,10 @@ class WalletTest {
     assertEquals(expectedResult, actualResult)
   }
 
+  fun `deposit different currency should be failed`() {
+
+  }
+
   private fun createActiveWallet(amount: Int): Wallet = Wallet(
     UUID.randomUUID(),
     "USD for investment",
@@ -31,9 +33,4 @@ class WalletTest {
   )
 
   private fun usd(amount: Int): Money = Money(BigDecimal(amount), Currency.USD)
-
-  private fun <T> Either<WalletException, T>.expectRight(message: String): T {
-    assertTrue(this.isRight, "$message but failed with [${this.swap().getOrNull()}]")
-    return this.get()
-  }
 }
