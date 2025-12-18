@@ -1,10 +1,21 @@
 package com.fResult.resilienceWalletLedger.common.fixtures
 
+import io.vavr.Function1.identity
 import io.vavr.control.Either
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.fail
 
-fun <L, T> Either<L, T>.expectRight(message: String): T {
-  assertTrue(this.isRight, "$message but failed with [${this.swap().getOrNull()}]")
+fun <L : Exception, R> Either<L, R>.expectRight(message: String): R {
+  return this.fold(
+    { left ->
+      fail<Any>("$message but was failed with: [$left]")
+      throw left
+    },
+    identity()
+  )
+}
 
-  return this.get()
+fun <L : Exception, R> Either<L, R>.expectLeft(message: String): L {
+  return this.fold(identity()) { right ->
+    fail<L>("$message but was successful with: [$right]")
+  }
 }
