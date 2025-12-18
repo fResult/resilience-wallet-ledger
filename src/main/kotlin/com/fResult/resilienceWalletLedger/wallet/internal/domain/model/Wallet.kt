@@ -16,11 +16,11 @@ data class Wallet(
 ) {
   fun deposit(amount: Money): Either<WalletException, Wallet> {
     if (!amount.isPositive()) {
-      return Either.left(WalletException("Invalid deposit amount: [${amount.amount} ${amount.currency.name}]. Must be greater than zero"))
+      return Either.left(WalletException("Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero"))
     }
 
     if (currencyMismatched(amount)) {
-      return Either.left(WalletException("Currency mismatch! Cannot deposit ${amount.currency.value} to ${balance.currency.value}"))
+      return Either.left(WalletException("Currency mismatch! Cannot deposit [${amount.currency}] to [${balance.currency}]"))
     }
 
     val balanceToDeposit = balance + amount
@@ -30,11 +30,11 @@ data class Wallet(
 
   fun withdraw(amount: Money): Either<WalletException, Wallet> {
     if (!amount.isPositive()) {
-      return Either.left(WalletException("Invalid withdraw amount: [${amount.amount} ${amount.currency.name}]. Must be greater than zero"))
+      return Either.left(WalletException("Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero"))
     }
 
     if (currencyMismatched(amount)) {
-      return Either.left(WalletException("Currency mismatch! Cannot withdraw ${amount.currency.value} from ${balance.currency.value}"))
+      return Either.left(WalletException("Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]"))
     }
     if (isInsufficient(amount)) {
       return Either.left(WalletInsufficient("Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency.value}"))
