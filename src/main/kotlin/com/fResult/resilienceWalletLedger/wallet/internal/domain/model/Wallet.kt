@@ -1,7 +1,7 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficient
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficientException
 import io.vavr.control.Either
 import java.util.*
 
@@ -37,7 +37,7 @@ data class Wallet(
       return Either.left(WalletException("Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]"))
     }
     if (isInsufficient(amount)) {
-      return Either.left(WalletInsufficient("Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency.value}"))
+      return Either.left(WalletInsufficientException("Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}"))
     }
 
     val balanceToWithdraw = balance - amount
