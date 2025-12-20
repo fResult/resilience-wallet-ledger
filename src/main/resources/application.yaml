@@ -1,3 +1,25 @@
+app:
+  wallet-db:
+    username: admin
+    password: password
+
 spring:
   application:
     name: Resilience Wallet Ledger
+
+  # ⚠️ Don't add password on Production, this is for demonstration
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/wallet_db
+    username: ${app.wallet-db.username}
+    password: ${app.wallet-db.password}
+    pool:
+      initial-size: 5
+      max-size: 20
+
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://localhost:5432/wallet_db
+    user: ${app.db.username}
+    password: ${app.db.password}
+    locations:
+      - classpath:db/migration

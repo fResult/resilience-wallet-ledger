@@ -31,7 +31,12 @@ External changes (e.g. DB or external API) don't affect the core domain.
 
 ### ƛ Functional Programming (FP)
 
-The project uses FP principles like Immutability and `Either`.\
+The project uses FP principles like Immutability and `Either`.
+
+**Why `Either` instead of Exceptions?**
+- **Errors as Data:** To treat failures as domain data (`Either.Left`), not exceptions
+- **Explicit Flow:** To avoid hidden control flow (try-catch)
+
 This enables our code predictable, composable, and reduces side effects.
 
 **Why this combination?**
@@ -49,10 +54,10 @@ The ultimate goal is to bridge the gap between technical implementation and busi
 
 Install these tools before you start:
 
-- **JDK 24**: This project uses Java 24.
-- **Docker Engine**: **Colima** is recommended on macOS/Linux for better performance.
-- **Docker Compose**: Required for running the PostgreSQL database.
-- **Git**: Used for version control.
+- **JDK 24**: This project uses Java 24
+- **Docker Engine**: **Colima** is recommended on macOS/Linux for better performance
+- **Docker Compose**: Required for running the PostgreSQL database
+- **Git**: Used for version control
 
 ## 🚀 Getting Started
 
