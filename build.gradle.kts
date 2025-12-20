@@ -43,6 +43,10 @@ spotless {
 
     target("**/*.kt")
     targetExclude("**/build/**")
+
+    trimTrailingWhitespace()
+    leadingTabsToSpaces()
+    endWithNewline()
   }
 
   kotlinGradle {
@@ -86,8 +90,7 @@ tasks.register("installGitHooks") {
 
       echo "✅ Code formatted successfully."
       exit 0
-      """
-        .trimIndent()
+      """.trimIndent()
 
     preCommitFile.writeText(script)
     preCommitFile.setExecutable(true)

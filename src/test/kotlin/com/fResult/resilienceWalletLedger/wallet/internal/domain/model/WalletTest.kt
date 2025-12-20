@@ -3,11 +3,11 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficientException
-import java.math.BigDecimal
-import java.util.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
+import java.math.BigDecimal
+import java.util.UUID
 
 class WalletTest {
   @Test
