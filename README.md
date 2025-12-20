@@ -56,7 +56,27 @@ Install these tools before you start:
 
 ## 🚀 Getting Started
 
-### 1. Setup Docker Environment (Colima)
+### 1. Setup Git Hooks
+
+This project uses a *pre-commit hook* to enforce code style.\
+
+Run this command once to install it:
+
+```bash
+./gradlew installGitHooks
+```
+
+Run this command if you need to format code by your hand:
+
+```bash
+./gradlew spotlessApply
+```
+
+```bash
+./gradlew 
+```
+
+### 2. Setup Docker Environment (Colima)
 
 If you use macOS with Colima, start it first.\
 Make sure you give it enough CPU and RAM.
@@ -66,7 +86,7 @@ Make sure you give it enough CPU and RAM.
 colima start --cpu 4 --memory 8
 ```
 
-### 2. Start Infrastructure
+### 3. Start Infrastructure
 
 Use Docker Compose to start the database:
 
@@ -75,7 +95,7 @@ Use Docker Compose to start the database:
 docker compose up -d
 ```
  
-### 3. Run the Application
+### 4. Run the Application
  
 Run the Spring Boot application via Gradle wrapper:
 
