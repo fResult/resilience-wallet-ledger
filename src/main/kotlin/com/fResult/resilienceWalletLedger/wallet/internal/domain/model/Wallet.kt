@@ -16,11 +16,19 @@ data class Wallet(
 ) {
   fun deposit(amount: Money): Either<WalletException, Wallet> {
     if (!amount.isPositive()) {
-      return Either.left(WalletException("Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero"))
+      return Either.left(
+        WalletException(
+          "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero"
+        )
+      )
     }
 
     if (currencyMismatched(amount)) {
-      return Either.left(WalletException("Currency mismatch! Cannot deposit [${amount.currency}] to [${balance.currency}]"))
+      return Either.left(
+        WalletException(
+          "Currency mismatch! Cannot deposit [${amount.currency}] to [${balance.currency}]"
+        )
+      )
     }
 
     val balanceToDeposit = balance + amount
@@ -30,14 +38,26 @@ data class Wallet(
 
   fun withdraw(amount: Money): Either<WalletException, Wallet> {
     if (!amount.isPositive()) {
-      return Either.left(WalletException("Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero"))
+      return Either.left(
+        WalletException(
+          "Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero"
+        )
+      )
     }
 
     if (currencyMismatched(amount)) {
-      return Either.left(WalletException("Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]"))
+      return Either.left(
+        WalletException(
+          "Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]"
+        )
+      )
     }
     if (isInsufficient(amount)) {
-      return Either.left(WalletInsufficientException("Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}"))
+      return Either.left(
+        WalletInsufficientException(
+          "Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}"
+        )
+      )
     }
 
     val balanceToWithdraw = balance - amount
@@ -46,5 +66,6 @@ data class Wallet(
   }
 
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
+
   private fun isInsufficient(money: Money): Boolean = balance.amount < money.amount
 }
