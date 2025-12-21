@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: 18.1-alpine3.23
+    image: postgres:18.1-alpine3.23
     container_name: wallet_ledger_db
     ports:
       - "5432:5432"
