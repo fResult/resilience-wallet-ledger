@@ -47,7 +47,6 @@ class WalletTest {
   @CsvSource("-1", "0")
   fun `deposit zero or negative amount should fail`(invalidAmount: Int) {
     // Given
-
     val expectedErrorMessage =
       "Invalid deposit amount: [$invalidAmount ${Currency.USD}]. Must be greater than zero"
     val initialWallet = createActiveUsdWallet(100)
@@ -72,8 +71,25 @@ class WalletTest {
     val result = initialWallet.withdraw(withdrawalAmount)
 
     // Then
-    val actualResult = result.expectRight("Withdraw should succeed")
+    val actualResult = result.expectRight("Withdrawal should succeed")
     assertEquals(expectedResult, actualResult)
+  }
+
+  @ParameterizedTest
+  @CsvSource("-1", "0")
+  fun `withdraw zero or negative amount should fail`(invalidAmount: Int) {
+    // Given
+    val expectedErrorMessage =
+      "Invalid withdraw amount: [$invalidAmount ${Currency.USD}]. Must be greater than zero"
+    val initialWallet = createActiveUsdWallet(100)
+    val depositAmount = usd(invalidAmount)
+
+    // When
+    val result = initialWallet.withdraw(depositAmount)
+
+    // Then
+    val actualError = result.expectLeft("Withdrawal should fail")
+    assertEquals(expectedErrorMessage, actualError.message)
   }
 
   @Test
