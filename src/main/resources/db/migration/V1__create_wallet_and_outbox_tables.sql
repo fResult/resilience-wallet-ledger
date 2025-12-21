@@ -37,4 +37,4 @@ WHERE delivery_status = 'PENDING';
 
 -- Documentation for future maintainers (Why no FK?)
 COMMENT ON TABLE outbox_wallet_events IS 'Stores domain events for the Transactional Outbox pattern. Designed for high-throughput writes.';
-COMMENT ON COLUMN outbox_wallet_events.aggregate_id IS 'Refers to wallets.id. Intentionally NO FK constraint to enable future sharding/partitioning strategies and avoid locking contention during high-concurrency writes.';
+COMMENT ON COLUMN outbox_wallet_events.aggregate_id IS 'Refers to wallets.id. Intentionally NO FK constraint to allow for future sharding/partitioning strategies and avoid locking contention during high-concurrency writes.';
