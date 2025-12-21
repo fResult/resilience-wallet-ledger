@@ -3,14 +3,13 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficientException
 import io.vavr.control.Either
-import java.util.UUID
 
 data class Wallet(
-  val id: UUID,
+  val id: WalletId,
   val name: String,
   val balance: Money,
-  val linkedBankAccountId: UUID,
-  val ownerId: UUID,
+  val linkedBankAccountId: BankAccountId?,
+  val ownerId: OwnerId,
   val status: WalletStatus,
   val version: Long = 0,
 ) {

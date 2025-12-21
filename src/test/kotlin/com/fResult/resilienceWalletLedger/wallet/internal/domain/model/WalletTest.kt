@@ -4,7 +4,6 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficientException
 import java.math.BigDecimal
-import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
@@ -12,6 +11,10 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 
 class WalletTest {
+  private val walletId = WalletId.generate()
+  private val ownerId = OwnerId.generate()
+  private val linkedBankAccountId = BankAccountId.generate()
+
   @Test
   fun `deposit positive amount should increase balance and version`() {
     // Given
@@ -134,11 +137,11 @@ class WalletTest {
 
   private fun createActiveWallet(balance: Money) =
     Wallet(
-      id = UUID.randomUUID(),
+      id = walletId,
       name = "Test Wallet",
       balance = balance,
-      linkedBankAccountId = UUID.randomUUID(),
-      ownerId = UUID.randomUUID(),
+      linkedBankAccountId = linkedBankAccountId,
+      ownerId = ownerId,
       WalletStatus.ACTIVE,
     )
 
