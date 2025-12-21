@@ -8,6 +8,8 @@ import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 class WalletTest {
   @Test
@@ -32,6 +34,24 @@ class WalletTest {
       "Currency mismatch! Cannot deposit [${Currency.THB}] to [${Currency.USD}]"
     val initialWallet = createActiveUsdWallet(100)
     val depositAmount = thb(1000)
+
+    // When
+    val result = initialWallet.deposit(depositAmount)
+
+    // Then
+    val actualError = result.expectLeft("Deposit should fail")
+    assertEquals(expectedErrorMessage, actualError.message)
+  }
+
+  @ParameterizedTest
+  @CsvSource("-1", "0")
+  fun `deposit zero or negative amount should fail`(invalidAmount: Int) {
+    // Given
+
+    val expectedErrorMessage =
+      "Invalid deposit amount: [$invalidAmount ${Currency.USD}]. Must be greater than zero"
+    val initialWallet = createActiveUsdWallet(100)
+    val depositAmount = usd(invalidAmount)
 
     // When
     val result = initialWallet.deposit(depositAmount)
@@ -94,13 +114,15 @@ class WalletTest {
     assertEquals(expectedErrorMessage, actualError.message)
   }
 
-  private fun createActiveUsdWallet(amount: Int): Wallet =
+  private fun createActiveUsdWallet(amount: Int): Wallet = createActiveWallet(usd(amount))
+
+  private fun createActiveWallet(balance: Money) =
     Wallet(
-      UUID.randomUUID(),
-      "USD for investment",
-      usd(amount),
-      UUID.randomUUID(),
-      UUID.randomUUID(),
+      id = UUID.randomUUID(),
+      name = "Test Wallet",
+      balance = balance,
+      linkedBankAccountId = UUID.randomUUID(),
+      ownerId = UUID.randomUUID(),
       WalletStatus.ACTIVE,
     )
 
