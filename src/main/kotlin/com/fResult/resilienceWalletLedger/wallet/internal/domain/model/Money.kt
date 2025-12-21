@@ -6,13 +6,6 @@ data class Money(
   val amount: BigDecimal,
   val currency: Currency,
 ) {
-  init {
-    val atLeastZero = amount >= BigDecimal.ZERO
-    require(atLeastZero) {
-      "Invalid amount: [$amount ${currency.name}]. Amount cannot be negative."
-    }
-  }
-
   companion object {
     fun zero(currency: Currency) = Money(BigDecimal.ZERO, currency)
   }
