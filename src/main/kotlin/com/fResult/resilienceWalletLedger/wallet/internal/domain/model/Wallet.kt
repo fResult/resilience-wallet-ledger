@@ -1,7 +1,7 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficientException
 import io.vavr.control.Either
 
 data class Wallet(
@@ -53,7 +53,7 @@ data class Wallet(
     }
     if (isInsufficient(amount)) {
       return Either.left(
-        WalletInsufficientException(
+        WalletBalanceInsufficientException(
           "Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}",
         ),
       )

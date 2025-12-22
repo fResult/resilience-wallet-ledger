@@ -2,7 +2,7 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletInsufficientException
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -126,9 +126,9 @@ class WalletTest {
 
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")
-    assertInstanceOf<WalletInsufficientException>(
+    assertInstanceOf<WalletBalanceInsufficientException>(
       actualError,
-      "Error should be ${WalletInsufficientException::class.simpleName}",
+      "Error should be ${WalletBalanceInsufficientException::class.simpleName}",
     )
     assertEquals(expectedErrorMessage, actualError.message)
   }
