@@ -15,7 +15,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(24) } }
 repositories { mavenCentral() }
 
 val vavrVersion = "0.11.0"
-val testcontainersVersion = "2.0.3"
+// val testcontainersVersion = "2.0.3"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
@@ -32,13 +32,13 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql")
   runtimeOnly("org.postgresql:r2dbc-postgresql")
 
-  testImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
+//  testImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-r2dbc-test")
   testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
   testImplementation("org.springframework.boot:spring-boot-testcontainers")
-  testImplementation("org.testcontainers:postgresql")
-  testImplementation("org.testcontainers:r2dbc")
+//  testImplementation("org.testcontainers:postgresql")
+//  testImplementation("org.testcontainers:r2dbc")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
