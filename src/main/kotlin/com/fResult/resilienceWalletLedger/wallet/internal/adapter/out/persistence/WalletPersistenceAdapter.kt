@@ -42,6 +42,7 @@ class WalletPersistenceAdapter(
     wallet
       .let(::toEntity)
       .let(repository::save)
+      .switchIfEmpty(Mono.error(WalletException("Save returned empty")))
       .map(::toDomain)
       .commandToEither(translatePersistenceError(wallet.id.value))
 

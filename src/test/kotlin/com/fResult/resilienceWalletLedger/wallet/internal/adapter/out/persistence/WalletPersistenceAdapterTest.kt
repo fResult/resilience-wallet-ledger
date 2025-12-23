@@ -210,6 +210,22 @@ class WalletPersistenceAdapterTest {
 
   @Test
   fun `save should handle empty Mono from repository (Safety Check)`() {
+    // Given
+    val wallet = createWallet()
+    given(repository.save(any(WalletEntity::class.java))).willReturn(Mono.empty())
+
+    // When
+    val actualResult = adapter.save(wallet)
+
+    // Then
+    StepVerifier
+      .create(actualResult)
+      .assertNext { result ->
+        val error = result.expectLeft("Should fail on empty result")
+        assertInstanceOf(WalletException::class.java, error)
+        assertEquals("Unexpected System Error", error.message)
+        assertEquals("Save returned empty", error.cause?.message)
+      }.verifyComplete()
   }
 
   private fun createWalletEntity(id: UUID) =
