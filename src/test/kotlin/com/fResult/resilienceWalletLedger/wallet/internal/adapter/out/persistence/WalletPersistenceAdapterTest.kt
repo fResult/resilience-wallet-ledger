@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence
 
+import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
@@ -72,6 +73,30 @@ class WalletPersistenceAdapterTest {
       .assertNext { result ->
         val error = result.expectLeft("Should not find wallet")
         assertEquals(WalletNotFoundException::class.java, error::class.java)
+      }.verifyComplete()
+  }
+
+  @Test
+  fun `findById should fail with InvariantViolationException on corrupted data`() {
+    // Given
+    val corruptedEntity = createWalletEntity(mockWalletId.value).copy(_id = null)
+    given(repository.findById(mockWalletId.value)).willReturn(Mono.just(corruptedEntity))
+
+    // When
+    val actualResult = adapter.findById(mockWalletId)
+
+    // Then
+    StepVerifier
+      .create(actualResult)
+      .assertNext { result ->
+        val error = result.expectLeft("Should catch mapping error")
+        assertInstanceOf(WalletException::class.java, error)
+        assertEquals("Unexpected System Error", error.message)
+        assertInstanceOf(InvariantViolationException::class.java, error.cause)
+        assertEquals(
+          "CRITICAL: Found WalletEntity with null ID inside DB! This is a bug.",
+          error.cause?.message,
+        )
       }.verifyComplete()
   }
 
