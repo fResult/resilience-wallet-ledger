@@ -8,6 +8,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistenc
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletAlreadyExistsException
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletConcurrencyException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletNotFoundException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.BankAccountId
@@ -22,6 +23,7 @@ import java.time.Instant
 import java.util.UUID
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
+import org.springframework.dao.OptimisticLockingFailureException
 import reactor.core.publisher.Mono
 
 @PersistenceAdapter
@@ -90,6 +92,12 @@ class WalletPersistenceAdapter(
 
         is DataIntegrityViolationException ->
           WalletException("Data Integrity Violation: ${ex.message}", ex)
+
+        is OptimisticLockingFailureException ->
+          WalletConcurrencyException(
+            "Wallet with ID [$id] has been modified by another transaction",
+            ex,
+          )
 
         else -> WalletException("Unexpected System Error", ex)
       }
