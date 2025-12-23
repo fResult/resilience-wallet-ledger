@@ -121,6 +121,26 @@ class WalletPersistenceAdapterTest {
   }
 
   @Test
+  fun `findById should return Left when data mapping fails (Invalid Enum)`() {
+    // Given
+    val invalidEnumEntity = createWalletEntity(mockWalletId.value).copy(balanceCurrency = "BITCOIN")
+    given(repository.findById(mockWalletId.value)).willReturn(Mono.just(invalidEnumEntity))
+
+    // When
+    val actualResult = adapter.findById(mockWalletId)
+
+    // Then
+    StepVerifier
+      .create(actualResult)
+      .assertNext { result ->
+        val error = result.expectLeft("Should handle enum mapping error")
+        assertInstanceOf(WalletException::class.java, error)
+        assertEquals("Unexpected System Error", error.message)
+        assertInstanceOf(IllegalArgumentException::class.java, error.cause)
+      }.verifyComplete()
+  }
+
+  @Test
   fun `save should return Left(WalletException) when repository unexpected error`() {
     // Given
     val wallet = createWallet()
@@ -186,6 +206,10 @@ class WalletPersistenceAdapterTest {
         )
         assertInstanceOf(OptimisticLockingFailureException::class.java, error.cause)
       }.verifyComplete()
+  }
+
+  @Test
+  fun `save should handle empty Mono from repository (Safety Check)`() {
   }
 
   private fun createWalletEntity(id: UUID) =
