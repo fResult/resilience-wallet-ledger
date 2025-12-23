@@ -6,6 +6,7 @@ import com.fResult.resilienceWalletLedger.common.extension.toEither
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletAlreadyExistsException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletNotFoundException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.BankAccountId
@@ -35,7 +36,7 @@ class WalletPersistenceAdapter(
           else -> ex
         }.let(Mono<Wallet>::error)
       }.map(::toDomain)
-      .toEither(::WalletNotFoundException) {
+      .toEither({ ex -> WalletNotFoundException(cause = ex) }) {
         WalletNotFoundException("Wallet with ID ${id.value} not found")
       }
 
@@ -43,13 +44,28 @@ class WalletPersistenceAdapter(
     wallet
       .let(::toEntity)
       .let(repository::save)
-      .onErrorResume { ex ->
+//      .onErrorResume { ex ->
+//        when (ex) {
+//          is DuplicateKeyException ->
+//            WalletAlreadyExistsException(
+//              "Wallet with wallet ID [${wallet.id.value}] already existed",
+//              ex,
+//            )
+//          else -> WalletException("Unexpected System Error", ex)
+//        }.let(Mono<Wallet>::error)
+//      }
+      .map(::toDomain)
+      .toEither({ ex ->
         when (ex) {
-          is DuplicateKeyException -> IllegalArgumentException(ex)
-          else -> ex
-        }.let(Mono<Wallet>::error)
-      }.map(::toDomain)
-      .toEither(::WalletException) { WalletException("Failed") }
+          is DuplicateKeyException ->
+            WalletAlreadyExistsException(
+              "Wallet with wallet ID [${wallet.id.value}] already existed",
+              ex,
+            )
+
+          else -> WalletException("Unexpected System Error", ex)
+        }
+      }) { WalletNotFoundException("Failed") }
 
   private fun toDomain(entity: WalletEntity): Wallet =
     Wallet(
