@@ -2,7 +2,8 @@ package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persisten
 
 import com.fResult.resilienceWalletLedger.common.annotation.PersistenceAdapter
 import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
-import com.fResult.resilienceWalletLedger.common.extension.toEither
+import com.fResult.resilienceWalletLedger.common.extension.commandToEither
+import com.fResult.resilienceWalletLedger.common.extension.queryToEither
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
@@ -29,14 +30,8 @@ class WalletPersistenceAdapter(
   override fun findById(id: WalletId): Mono<Either<WalletException, Wallet>> =
     repository
       .findById(id.value)
-      .onErrorResume { ex ->
-        when (ex) {
-          is DataIntegrityViolationException -> IllegalArgumentException(ex)
-          is NoSuchElementException -> WalletNotFoundException(ex.message, ex)
-          else -> ex
-        }.let(Mono<Wallet>::error)
-      }.map(::toDomain)
-      .toEither({ ex -> WalletNotFoundException(cause = ex) }) {
+      .map(::toDomain)
+      .queryToEither(::persistenceErrorMap) {
         WalletNotFoundException("Wallet with ID ${id.value} not found")
       }
 
@@ -44,28 +39,8 @@ class WalletPersistenceAdapter(
     wallet
       .let(::toEntity)
       .let(repository::save)
-//      .onErrorResume { ex ->
-//        when (ex) {
-//          is DuplicateKeyException ->
-//            WalletAlreadyExistsException(
-//              "Wallet with wallet ID [${wallet.id.value}] already existed",
-//              ex,
-//            )
-//          else -> WalletException("Unexpected System Error", ex)
-//        }.let(Mono<Wallet>::error)
-//      }
       .map(::toDomain)
-      .toEither({ ex ->
-        when (ex) {
-          is DuplicateKeyException ->
-            WalletAlreadyExistsException(
-              "Wallet with wallet ID [${wallet.id.value}] already existed",
-              ex,
-            )
-
-          else -> WalletException("Unexpected System Error", ex)
-        }
-      }) { WalletNotFoundException("Failed") }
+      .commandToEither(::persistenceErrorMap)
 
   private fun toDomain(entity: WalletEntity): Wallet =
     Wallet(
@@ -105,4 +80,15 @@ class WalletPersistenceAdapter(
       createdAt = Instant.now(),
       updatedAt = Instant.now(),
     )
+
+  private fun persistenceErrorMap(ex: Throwable): WalletException =
+    when (ex) {
+      is DuplicateKeyException ->
+        WalletAlreadyExistsException("Wallet already exists", ex)
+
+      is DataIntegrityViolationException ->
+        WalletException("Data Integrity Violation: ${ex.message}", ex)
+
+      else -> WalletException("Unexpected System Error", ex)
+    }
 }
