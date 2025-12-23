@@ -4,7 +4,9 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletAlreadyExistsException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletNotFoundException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.BankAccountId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
@@ -15,11 +17,14 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletSta
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
+import kotlin.test.assertContains
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.any
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.mock
+import org.springframework.dao.DuplicateKeyException
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
@@ -52,7 +57,44 @@ class WalletPersistenceAdapterTest {
   }
 
   @Test
-  fun `save should return Left(WalletException) when repository fails`() {
+  fun `findById should return Left(WalletNotFoundException) when entity does not exist`() {
+    // Given
+    given(repository.findById(mockWalletId.value)).willReturn(Mono.empty())
+
+    // When
+    val resultMono = adapter.findById(mockWalletId)
+
+    // Then
+    StepVerifier
+      .create(resultMono)
+      .assertNext { result ->
+        val error = result.expectLeft("Should not find wallet")
+        assertEquals(WalletNotFoundException::class.java, error::class.java)
+      }.verifyComplete()
+  }
+
+  @Test
+  fun `save should return Right(Wallet) when successful`() {
+    // Given
+    val wallet = createWallet()
+    val entity = createWalletEntity(wallet.id.value)
+
+    given(repository.save(any())).willReturn(Mono.just(entity))
+
+    // When
+    val resultMono = adapter.save(wallet)
+
+    // Then
+    StepVerifier
+      .create(resultMono)
+      .assertNext { result ->
+        val savedWallet = result.expectRight("Should save wallet")
+        assertEquals(wallet.id, savedWallet.id)
+      }.verifyComplete()
+  }
+
+  @Test
+  fun `save should return Left(WalletException) when repository unexpected error`() {
     // Given
     val wallet = createWallet()
     given(
@@ -69,6 +111,28 @@ class WalletPersistenceAdapterTest {
         val error = result.expectLeft("Should fail to save")
         assertEquals(WalletException::class.java, error::class.java)
         assertEquals("Unexpected System Error", error.message)
+      }.verifyComplete()
+  }
+
+  @Test
+  fun `save should return Left(WalletAlreadyExistsException) when repository fails`() {
+    // Given
+    val wallet = createWallet()
+    val errorMessage = "Wallet with wallet ID [${wallet.id.value}] already existed"
+    given(
+      repository.save(any(WalletEntity::class.java)),
+    ).willReturn(Mono.error(DuplicateKeyException(errorMessage)))
+
+    // When
+    val resultMono = adapter.save(wallet)
+
+    // Then
+    StepVerifier
+      .create(resultMono)
+      .assertNext { result ->
+        val error = result.expectLeft("Should fail to save")
+        Assertions.assertInstanceOf(WalletAlreadyExistsException::class.java, error)
+        error.message?.also { assertContains(it, wallet.id.value.toString()) }
       }.verifyComplete()
   }
 
