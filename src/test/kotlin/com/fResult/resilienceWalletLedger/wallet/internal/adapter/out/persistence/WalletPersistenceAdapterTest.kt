@@ -1,17 +1,23 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence
 
+import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.BankAccountId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletStatus
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.any
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.mock
 import reactor.core.publisher.Mono
@@ -45,6 +51,27 @@ class WalletPersistenceAdapterTest {
       }.verifyComplete()
   }
 
+  @Test
+  fun `save should return Left(WalletException) when repository fails`() {
+    // Given
+    val wallet = createWallet()
+    given(
+      repository.save(any(WalletEntity::class.java)),
+    ).willReturn(Mono.error(RuntimeException("DB Error")))
+
+    // When
+    val resultMono = adapter.save(wallet)
+
+    // Then
+    StepVerifier
+      .create(resultMono)
+      .assertNext { result ->
+        val error = result.expectLeft("Should fail to save")
+        assertEquals(WalletException::class.java, error::class.java)
+        assertEquals("Unexpected System Error", error.message)
+      }.verifyComplete()
+  }
+
   private fun createWalletEntity(id: UUID) =
     WalletEntity(
       _id = id,
@@ -57,5 +84,16 @@ class WalletPersistenceAdapterTest {
       version = 1L,
       createdAt = Instant.now(),
       updatedAt = Instant.now(),
+    )
+
+  private fun createWallet() =
+    Wallet(
+      id = mockWalletId,
+      name = "Test Wallet",
+      balance = Money(BigDecimal.TEN, Currency.USD),
+      linkedBankAccountId = bankAccountId,
+      ownerId = ownerId,
+      status = WalletStatus.ACTIVE,
+      version = 1L,
     )
 }
