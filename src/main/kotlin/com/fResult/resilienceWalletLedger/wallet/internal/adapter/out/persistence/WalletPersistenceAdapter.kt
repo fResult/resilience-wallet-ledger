@@ -19,6 +19,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletStatus
 import io.vavr.control.Either
 import java.time.Instant
+import java.util.UUID
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
 import reactor.core.publisher.Mono
@@ -31,7 +32,7 @@ class WalletPersistenceAdapter(
     repository
       .findById(id.value)
       .map(::toDomain)
-      .queryToEither(::persistenceErrorMap) {
+      .queryToEither(translatePersistenceError(id.value)) {
         WalletNotFoundException("Wallet with ID ${id.value} not found")
       }
 
@@ -40,7 +41,7 @@ class WalletPersistenceAdapter(
       .let(::toEntity)
       .let(repository::save)
       .map(::toDomain)
-      .commandToEither(::persistenceErrorMap)
+      .commandToEither(translatePersistenceError(wallet.id.value))
 
   private fun toDomain(entity: WalletEntity): Wallet =
     Wallet(
@@ -81,14 +82,16 @@ class WalletPersistenceAdapter(
       updatedAt = Instant.now(),
     )
 
-  private fun persistenceErrorMap(ex: Throwable): WalletException =
-    when (ex) {
-      is DuplicateKeyException ->
-        WalletAlreadyExistsException("Wallet already exists", ex)
+  private fun translatePersistenceError(id: UUID): (Throwable) -> WalletException =
+    { ex ->
+      when (ex) {
+        is DuplicateKeyException ->
+          WalletAlreadyExistsException("Wallet with ID [$id] already existed", ex)
 
-      is DataIntegrityViolationException ->
-        WalletException("Data Integrity Violation: ${ex.message}", ex)
+        is DataIntegrityViolationException ->
+          WalletException("Data Integrity Violation: ${ex.message}", ex)
 
-      else -> WalletException("Unexpected System Error", ex)
+        else -> WalletException("Unexpected System Error", ex)
+      }
     }
 }

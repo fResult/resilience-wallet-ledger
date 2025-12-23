@@ -33,8 +33,8 @@ class WalletPersistenceAdapterTest {
   private val adapter = WalletPersistenceAdapter(repository)
 
   private val mockWalletId = WalletId.generate()
-  private val ownerId = OwnerId.generate()
-  private val bankAccountId = BankAccountId.generate()
+  private val mockOwnerId = OwnerId.generate()
+  private val mockBankAccountId = BankAccountId.generate()
 
   @Test
   fun `findById should return Right(Wallet) when entity exists`() {
@@ -118,7 +118,7 @@ class WalletPersistenceAdapterTest {
   fun `save should return Left(WalletAlreadyExistsException) when repository fails`() {
     // Given
     val wallet = createWallet()
-    val errorMessage = "Wallet with wallet ID [${wallet.id.value}] already existed"
+    val errorMessage = "Wallet with ID [${wallet.id.value}] already existed"
     given(
       repository.save(any(WalletEntity::class.java)),
     ).willReturn(Mono.error(DuplicateKeyException(errorMessage)))
@@ -142,8 +142,8 @@ class WalletPersistenceAdapterTest {
       name = "Test Wallet",
       balanceAmount = BigDecimal.TEN,
       balanceCurrency = Currency.USD.name,
-      linkedBankAccountId = bankAccountId.value,
-      ownerId = ownerId.value,
+      linkedBankAccountId = mockBankAccountId.value,
+      ownerId = mockOwnerId.value,
       status = "ACTIVE",
       version = 1L,
       createdAt = Instant.now(),
@@ -155,8 +155,8 @@ class WalletPersistenceAdapterTest {
       id = mockWalletId,
       name = "Test Wallet",
       balance = Money(BigDecimal.TEN, Currency.USD),
-      linkedBankAccountId = bankAccountId,
-      ownerId = ownerId,
+      linkedBankAccountId = mockBankAccountId,
+      ownerId = mockOwnerId,
       status = WalletStatus.ACTIVE,
       version = 1L,
     )
