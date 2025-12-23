@@ -1,5 +1,7 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence
 
+import com.fResult.resilienceWalletLedger.common.annotation.PersistenceAdapter
+import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
 import com.fResult.resilienceWalletLedger.common.extension.toEither
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
@@ -19,6 +21,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
 import reactor.core.publisher.Mono
 
+@PersistenceAdapter
 class WalletPersistenceAdapter(
   private val repository: SpringDataWalletRepository,
 ) : WalletRepository {
@@ -32,7 +35,9 @@ class WalletPersistenceAdapter(
           else -> ex
         }.let(Mono<Wallet>::error)
       }.map(::toDomain)
-      .toEither { WalletNotFoundException("Wallet with ID ${id.value} not found") }
+      .toEither(::WalletNotFoundException) {
+        WalletNotFoundException("Wallet with ID ${id.value} not found")
+      }
 
   override fun save(wallet: Wallet): Mono<Either<WalletException, Wallet>> =
     wallet
@@ -44,14 +49,14 @@ class WalletPersistenceAdapter(
           else -> ex
         }.let(Mono<Wallet>::error)
       }.map(::toDomain)
-      .toEither { WalletException("Failed") }
+      .toEither(::WalletException) { WalletException("Failed") }
 
   private fun toDomain(entity: WalletEntity): Wallet =
     Wallet(
       id =
         WalletId(
           entity.id
-            ?: throw DataIntegrityViolationException(
+            ?: throw InvariantViolationException(
               "CRITICAL: Found WalletEntity with null ID inside DB! This is a bug.",
             ),
         ),
@@ -80,7 +85,6 @@ class WalletPersistenceAdapter(
       version = if (domain.version == 0L) null else domain.version,
       /**
        * FIXME: If update, `createdAt will be always overridden as Now
-       * Solution,
        */
       createdAt = Instant.now(),
       updatedAt = Instant.now(),
