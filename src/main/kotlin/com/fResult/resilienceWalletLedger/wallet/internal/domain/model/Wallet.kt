@@ -3,6 +3,7 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import io.vavr.control.Either
+import java.math.BigDecimal
 
 data class Wallet(
   val id: WalletId,
@@ -67,4 +68,20 @@ data class Wallet(
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
 
   private fun isInsufficient(money: Money): Boolean = balance.amount < money.amount
+
+  companion object {
+    fun create(
+      ownerId: OwnerId,
+      name: String,
+      currency: Currency,
+    ) = Wallet(
+      id = WalletId.generate(),
+      name = name,
+      balance = Money(BigDecimal.ZERO, currency),
+      ownerId = ownerId,
+      status = WalletStatus.ACTIVE,
+      version = 0L,
+      linkedBankAccountId = null,
+    )
+  }
 }

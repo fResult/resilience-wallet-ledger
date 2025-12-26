@@ -9,12 +9,12 @@ import io.vavr.control.Either
 import reactor.core.publisher.Mono
 
 class WalletService(
-  walletRepository: WalletRepository,
+  val walletRepository: WalletRepository,
 ) {
   fun createWallet(
+    walletName: String,
     ownerId: OwnerId,
     currency: Currency,
-  ): Mono<Either<WalletException, Wallet>> {
-    TODO("Not yet implemented")
-  }
+  ): Mono<Either<WalletException, Wallet>> =
+    Wallet.create(ownerId, walletName, currency).let(walletRepository::save)
 }

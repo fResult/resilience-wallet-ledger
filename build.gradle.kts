@@ -15,6 +15,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(24) } }
 repositories { mavenCentral() }
 
 val vavrVersion = "0.11.0"
+val mockitoKotlinVersion = "6.1.0"
 // val testcontainersVersion = "2.0.3"
 
 dependencies {
@@ -37,8 +38,9 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter-data-r2dbc-test")
   testImplementation("org.springframework.boot:spring-boot-starter-flyway-test")
   testImplementation("org.springframework.boot:spring-boot-testcontainers")
-//  testImplementation("org.testcontainers:postgresql")
-//  testImplementation("org.testcontainers:r2dbc")
+  testImplementation("org.mockito.kotlin:mockito-kotlin:$mockitoKotlinVersion")
+  // testImplementation("org.testcontainers:postgresql")
+  // testImplementation("org.testcontainers:r2dbc")
   testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
