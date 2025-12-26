@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.application.service
 
+import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
@@ -61,6 +62,31 @@ class WalletServiceTest {
         assertEquals(expectedBalance, createdWallet.balance)
         assertEquals(expectedVersion, createdWallet.version)
       }.verifyComplete()
+  }
+
+  @Test
+  fun `createWallet should return Left(WalletException) should return failure`() {
+    // Given
+    val expectedErrorMessage = "Persistence failed"
+    given(
+      walletRepository.save(any<Wallet>()),
+    ).willReturn(Mono.just(Either.left(WalletException(expectedErrorMessage))))
+
+    // When
+    val actualResult =
+      walletService.createWallet(
+        expectedWalletName,
+        expectedOwnerId,
+        expectedBalance.currency,
+      )
+
+    // Then
+    StepVerifier
+      .create(actualResult)
+      .assertNext { result ->
+        val error = result.expectLeft("Wallet creation failed")
+        assertEquals(error.message, expectedErrorMessage)
+      }
   }
 
   private fun mockSuccessfulPersistence(version: Long = 1L) {
