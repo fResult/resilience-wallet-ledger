@@ -1,11 +1,13 @@
 package com.fResult.resilienceWalletLedger.common.extension
 
-import com.fResult.resilienceWalletLedger.common.exception.BusinessRuleViolation
-import com.fResult.resilienceWalletLedger.common.exception.ConcurrencyConflict
-import com.fResult.resilienceWalletLedger.common.exception.DomainError
-import com.fResult.resilienceWalletLedger.common.exception.ResourceNotFound
+import com.fResult.resilienceWalletLedger.common.error.BusinessRuleViolation
+import com.fResult.resilienceWalletLedger.common.error.ConcurrencyConflict
+import com.fResult.resilienceWalletLedger.common.error.DomainError
+import com.fResult.resilienceWalletLedger.common.error.ResourceNotFound
 import io.vavr.control.Either
+import java.time.Instant
 import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 import reactor.core.publisher.Mono
 
 /**
@@ -39,6 +41,13 @@ fun <T : Any, E> Mono<T>.commandToEither(onError: (Throwable) -> E): Mono<Either
     .onErrorResume { ex ->
       Mono.just(Either.left(onError(ex)))
     }
+
+private fun DomainError.toProblemDetail(): ProblemDetail =
+  this.resolveHttpStatus().let { status ->
+    ProblemDetail.forStatusAndDetail(status, this.message ?: "Unknown Error").apply {
+      setProperty("timestamp", Instant.now())
+    }
+  }
 
 private fun DomainError.resolveHttpStatus(): HttpStatus =
   when (this) {
