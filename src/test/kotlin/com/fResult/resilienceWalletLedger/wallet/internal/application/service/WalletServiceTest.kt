@@ -68,9 +68,7 @@ class WalletServiceTest {
   fun `createWallet should return Left(WalletException) should return failure`() {
     // Given
     val expectedErrorMessage = "Persistence failed"
-    given(
-      walletRepository.save(any<Wallet>()),
-    ).willReturn(Mono.just(Either.left(WalletException(expectedErrorMessage))))
+    mockFailurePersistence(WalletException(expectedErrorMessage))
 
     // When
     val actualResult =
@@ -96,5 +94,10 @@ class WalletServiceTest {
         val createdWallet = walletToCreated.copy(version = version)
         Mono.just(Either.right<WalletException, Wallet>(createdWallet))
       }
+  }
+
+  private fun mockFailurePersistence(cause: WalletException) {
+    given(walletRepository.save(any<Wallet>()))
+      .willReturn(Mono.just(Either.left(cause)))
   }
 }
