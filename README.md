@@ -5,9 +5,16 @@ It focuses on **Resilience**, **Consistency**, and **High Concurrency**.\
 It is built with Kotlin and Spring Boot WebFlux.\
 It follows DDD and Hexagonal Architecture principles.
 
+> [!warning]
+> 
+> **⚠️ Educational Purpose Only**\
+> This repository is a Personal Sandbox & Reference Implementation.\
+> While the code is open for study, I do not accept Pull Requests or provide support.\
+> It serves as a proof-of-concept for modern resilient architecture patterns.
+
 ## 📖 About This Project
 
-This is a **practice project**.\
+This is a real-world **practice project**.\
 I want to master high-performance backend engineering.\
 And apply the concepts I have learned.
 
@@ -19,7 +26,7 @@ I haven't had many opportunities to touch high-performance backend work in my pr
 
 **Goal:**
 
-I started this project as sandbox to apply concepts I have learned for since 3 years ago until now.\
+I started this project as a sandbox to apply concepts I have learned from 2023 until now.\
 Aiming to build a solid foundation for architecting real-world, scalable distributed systems in the future.
 
 ## 🗺️ Roadmap & Status
@@ -41,9 +48,9 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 
 ### 🧠 Architectural Foundations (The "Why")
 
-*The core philosophy of Resilience, Scalability, and Message-Driven Architecture.*
+*The core philosophy of Mathematical Predictability, Resilience, Scalability, and Message-Driven Architecture.*
 
-- **Mathematics for Working Programmers** (Series) by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/codeappcompany)
+- **[Mathematics for Working Programmers](https://www.eventpop.me/e/6425/math-for-programmers)** (Series) by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/rawitat)
     - *Influence:* Served as a **Thinking Framework** for structuring complex logic.\
         It shifted my paradigm from just writing imperative instructions to designing flows that are **Predictable** and **Easy to Reason About**.\
         (using concepts like Equational Reasoning and State Transitions)
