@@ -30,7 +30,9 @@ Aiming to build a solid foundation for architecting real-world, scalable distrib
 - [ ] **Phase 4: Reconciliation** (Background Consistency Checks)
 - [ ] **Phase 5: Scaling** (Caching, Sharding strategies)
 
-> [!note] **Future Horizons:**
+> [!note]
+>
+> **Future Horizons:**
 > Once the Wallet core is bulletproof, I plan to introduce other domains like **Payment** (Orchestration), **Accounting** (Double-Entry Ledger), and **Notification** to simulate a full-blown microservices ecosystem
 
 ## 📚 Knowledge Lineage & Foundations
