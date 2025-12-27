@@ -74,65 +74,50 @@ External changes (e.g. DB or external API) don't affect the core domain.
 
 ### ƛ Functional Programming (FP)
 
-The project uses FP principles like Immutability and `Either`.
+The project heavily utilizes FP principles, specifically **Immutability** and **Railway Oriented Programming (ROP)** via `Either`.
 
-**Why `Either` instead of Exceptions?**
-- **Errors as Data:** To treat failures as domain data (`Either.Left`), not exceptions
-- **Explicit Flow:** To avoid hidden control flow (try-catch)
+#### 📖 The Visual Analogy: "Trapdoor" vs. "Railway"
 
-This enables our code predictable, composable, and reduces side effects.
+To understand why we avoid Exceptions for business logic, imagine tracing a critical bug:
 
-#### 📖 Story Time: The "Try-Catch" Nightmare vs. The "Railway" Clarity
+**1. The "Trapdoor" Nightmare (Exceptions)**
 
-Let's imagine a scenario in a Payment Gateway team where the logic is complex:
-`Validate -> Deduct -> Call Bank -> Update Status -> Notify`
+In traditional code, a function like `chargeUser()` might look successful, but deep inside, it throws an Exception.
+- **The Problem:** The code execution **"teleports"** (jumps) from `chargeUser()` to a hidden `catch` block somewhere far away.
+- **The Pain:** As developers, we can't *see* this jump just by reading the function signature\
+    It is an **invisible trapdoor**.
 
-**Scenario A: The Old Way (Exceptions)**
+**2. The "Railway" Clarity (Either)**
 
-- **Product Owner**: "If the Bank API call fails, what exactly happens?"
-- **Developer**: *(scrolling frantically looking for a `catch` block 50 lines down)*\
-    "Uh... let me trace the code. It jumps here... then if this throws, it might go there..."
-- **The Result**: Confusion, uncertainty, and hidden bugs.
+With `Either`, the code looks like a linear railway track:
+- **The Solution:** If `chargeUser()` fails (returns `Left`), the train simply **switches tracks** to the error line.\
+    It stays on the rail but bypasses the subsequent stations.
+- **The Gain:** We can *see* the flow.\
+    The failure path is just as explicit as the success path.\
+    No teleportation, no surprises.
 
-**Scenario B: The New Way (Either)**
+#### 💡 The Real-World Implementation
 
-Here is what the code looks like using `Either` (Railway-Oriented Programming):
+Instead of guessing where the code might crash, we write code that reads like a business flowchart:
+
+#### 🧠 Personal Reflection: Why Either?
+
+In my transition from Frontend to Backend, I found that traditional exception handling often created "Hidden Control Flows."\
+The function signature fun `process(): Wallet` implies guaranteed success, but it effectively "lies" if it throws a runtime exception.
+
+By adopting Railway-Oriented Programming, we force the function signature to tell the truth: `fun process(): Either<Failure, Wallet>`.\
+This explicitly states, "I might fail, and here is exactly how," forcing the caller to handle errors as Domain Data rather than unexpected crashes.
 
 ```kotlin
-// Real-world code that acts as documentation; even a business person can understand the flow
+// Real-world code that acts as documentation
 fun processPayment(cmd: PaymentCommand): Mono<Either<Failure, PaymentReceipt>> {
   return validateRequest(cmd)      // 1. Validate
-    .flatMap(::deductBalance)      // 2. Deduct Balance
-    .flatMap(::callBankApi)        // 3. Call Bank API
+    .flatMap(::deductBalance)      // 2. Deduct Balance (Switch track if logic fails)
+    .flatMap(::callBankApi)        // 3. Call Bank API (Switch track if network fails)
     .flatMap(::saveTransaction)    // 4. Save Transaction
     .flatMap(::sendEmail)          // 5. Notify User
 }
 ```
-
-- Product Owner: "If the Bank API call (Step 3) fails, where does it go?"
-- Developer: "Look at this chain. It connects steps together. If Step 3 fails (returns Left), it short-circuits. It skips Step 4 and 5. It returns the error from Step 3 immediately. It stops the process."
-- Product Owner: "Oh... I get it. It is like a train derailing and stopping. It does not crash into the next station."
-- Developer: "Exactly!"
-
-**The Elegance**:
-
-1. Linear Flow: You read code from top to bottom\
-    No jumping around (like GOTO or catch blocks)
-2. Type Safety: The compiler forces you to handle the Error case (Left)\
-    You cannot forget it.
-3. Visual: It looks like a flowchart\
-    Business people understand this better than nested try-catch blocks
-
-#### Why this combination?
-
-The aim is to connect code and business.\
-Code is written to look like business rules.
-
-**Business people should be able to read the flow**.\
-They can help engineer to fix bugs.\
-This ensures the software does what the business needs.
-
-The ultimate goal is to bridge the gap between technical implementation and business understanding.
 
 ## Prerequisites
 
