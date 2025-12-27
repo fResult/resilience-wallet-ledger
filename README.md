@@ -21,6 +21,17 @@ I haven't had many opportunities to touch high-performance backend work in my pr
 I started this project as sandbox to apply concepts I have learned for since 3 years ago until now.\
 Aiming to build a solid foundation for architecting real-world, scalable distributed systems in the future.
 
+## 🗺️ Roadmap & Status
+
+- [x] **Phase 1: The Core** (Domain Logic, Unit Tests, Validation)
+- [ ] **Phase 2: The Architecture** (Hexagonal Structure, DB Schema, Outbox Pattern) - *Current Focus* 👀
+- [ ] **Phase 3: Resilience** (Idempotency, Circuit Breaker, Distributed Tracing)
+- [ ] **Phase 4: Reconciliation** (Background Consistency Checks)
+- [ ] **Phase 5: Scaling** (Caching, Sharding strategies)
+
+> [!note] **Future Horizons:**
+> Once the Wallet core is bulletproof, I plan to introduce other domains like **Payment** (Orchestration), **Accounting** (Double-Entry Ledger), and **Notification** to simulate a full-blown microservices ecosystem
+
 ## 📚 Knowledge Lineage & Foundations
 
 This project is not built in a vacuum. It is the culmination of intensive study and practice in **Distributed Systems** and **Modern Java/Kotlin Development**. The architecture is heavily influenced by the following resources:
