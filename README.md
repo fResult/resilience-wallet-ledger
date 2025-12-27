@@ -8,7 +8,8 @@ It follows DDD and Hexagonal Architecture principles.
 ## 📖 About This Project
 
 This is a **practice project**.\
-I want to master high-performance backend engineering.
+I want to master high-performance backend engineering.\
+And apply the concepts I have learned.
 
 **Background:**
 
@@ -24,7 +25,7 @@ Aiming to build a solid foundation for architecting real-world, scalable distrib
 ## 🗺️ Roadmap & Status
 
 - [x] **Phase 1: The Core** (Domain Logic, Unit Tests, Validation)
-- [ ] **Phase 2: The Architecture** (Hexagonal Structure, DB Schema, Outbox Pattern) - *Current Focus* 👀
+- [ ] **Phase 2: The Architecture** (Hexagonal Structure, DB Schema, Outbox Pattern) - 👀 ***Current Focus***
 - [ ] **Phase 3: Resilience** (Idempotency, Circuit Breaker, Distributed Tracing)
 - [ ] **Phase 4: Reconciliation** (Background Consistency Checks)
 - [ ] **Phase 5: Scaling** (Caching, Sharding strategies)
@@ -41,28 +42,34 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 *The core philosophy of Resilience, Scalability, and Message-Driven Architecture.*
 
 - **Mathematics for Working Programmers** (Series) by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/codeappcompany)
-    - *Influence:* Served as a **Thinking Framework** for structuring complex logic\
-        It shifted my paradigm from just writing imperative instructions to designing flows that are **Predictable** and **Easy to Reason About**\
+    - *Influence:* Served as a **Thinking Framework** for structuring complex logic.\
+        It shifted my paradigm from just writing imperative instructions to designing flows that are **Predictable** and **Easy to Reason About**.\
         (using concepts like Equational Reasoning and State Transitions)
     - *Key Transformation:*
         - **From Accident to Intent:** Learned to eliminate ambiguity by replacing complex conditional chains with **Clear Predicates** and **State Transitions**, making the business logic explicit and readable
-        - **Flow & Composition:** Adopted principles like **Low-Entropy** and **Immutability** to reduce cognitive load\
+        - **Flow & Composition:** Adopted principles like **Low-Entropy** and **Immutability** to reduce cognitive load.\
             I use concepts from **Category Theory** (like *Functors* and *Monads*) as a practical **Design Patterns** to handle side effects and data transformation cleanly (e.g., Railway Oriented Programming)
+- **[Lightbend Reactive Architecture](https://cognitiveclass.ai/learn/reactive-architecture-advanced)** taught by [Wade Waldron](https://www.linkedin.com/in/wade-waldron)
+    - *Influence:* Provided the foundational mental model for building **Message-Driven, Resilient, and Elastic** systems.\
+        It established the core principles of the **Reactive Manifesto** and how to decouple components through asynchrony and isolation
+    - *Key Paths & Concepts:*
+        - **Foundations Path:** Mastered **Domain Driven Design (DDD)** for modeling bounded contexts and the **Hexagonal Architecture** pattern, which defines the core structure of this Ledger.\
+            It also emphasized **Isolation** (State, Space, Time, and Failure) to ensure system-wide resilience
+        - **Advanced Path:** Focused on **Building Scalable Systems**, specifically the trade-offs between **Consistency and Availability (CAP Theorem)** and the **Laws of Scalability** (Amdahl’s and Gunther’s Laws), which are critical for designing a high-concurrency distributed system
+
 ### 🛠 Implementation Mastery (The "How")
 *The technical skills required to translate architecture into working code.*
 
 - **[Reactive Spring](https://leanpub.com/reactive-spring)** by [Josh Long](https://www.linkedin.com/in/joshlong)
-    - *Influence:* A valuable guide for **Testing Reactive Systems** and mastering `StepVerifier`.
-    - *Re-engineering Lab:* [fResult/Learn-Spring-Webflux-3.0](https://github.com/fResult/Learn-Spring-Webflux-3.0) — *I adapted the original codebase (Java 17/Maven) to a **Bleeding Edge Stack** (Java 24, Spring Boot 3.5-4.0, Gradle Kotlin DSL)\
-        The project was restructured into a **Monorepo with Composite Builds** to understand dependency management in a modern Kotlin environment*
+    - *Influence:* A valuable guide for **Testing Reactive Systems** and mastering `StepVerifier`
+    - *Modernization Practice:* [fResult/Learn-Spring-Webflux-3.0](https://github.com/fResult/Learn-Spring-Webflux-3.0) — *I adapted the original Java 17/Maven examples into a **Bleeding Edge Stack** (Java 24, Spring Boot 3.5-4.0, Gradle Kotlin DSL).\
+        Restructured as a **Monorepo with Composite Builds** to better understand modern build-tool mechanics*
 - **[Learning Spring Boot 3.0](https://www.packtpub.com/product/learning-spring-boot-30-third-edition/9781803233307)** by [Greg L. Turnquist](https://www.linkedin.com/in/greg-l-turnquist)
-  - *Influence:* Offered me a Spring Boot practical perspective on **"Convention over Configuration"** and the **Spring Application Context** 
-    - *Implementation Log:* [fResult/Learning-Spring-Boot-3.0](https://github.com/fResult/Learning-Spring-Boot-3.0) — *Following the "Get Your Hands Dirty" philosophy, I manually implemented every pattern to internalize the mechanics, focusing on **Production-Grade** features like Native Images and Observability*
-- **[Gout Together](https://github.com/fResult/Gout-Together) project**, learned from ([Java Backend Developer Bootcamp](https://www.youtube.com/playlist?list=PLm3A9eDaMzukMQtdDoeOR-HbFN35vieQY)), by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
-    - *Influence:* An intensive series that reinforced my **Foundational Understanding** of Java and Spring Boot mechanics\
-        It emphasized code discipline and helped build the essential habits needed for developing structured applications
-    - *Enhanced Capstone:* [fResult/Gout-Together](https://github.com/fResult/Gout-Together) — *Beyond the curriculum, I enhanced this project by implementing **Virtual Threads** for concurrency, **Argon2** for security, and custom error handling strategies\
-        It served as a proving ground for applying resilience patterns like Idempotency and Locking.*
+    - *Influence:* Offered me a Spring Boot practical perspective on **"Convention over Configuration"** and the **Spring Application Context**
+    - *Implementation Log:* [fResult/Learning-Spring-Boot-3.0](https://github.com/fResult/Learning-Spring-Boot-3.0) — *Following the "Get Your Hands Dirty" philosophy, I manually implemented every pattern to internalize the framework's internal mechanics rather than relying on rote memorization*
+- **[Gout Together](https://github.com/fResult/Gout-Together)** (Java Backend Bootcamp) by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
+    - *Influence:* An intensive series that reinforced my **Foundational Understanding** of Java and Spring Boot
+    - *Enhanced Practice:* [fResult/Gout-Together](https://github.com/fResult/Gout-Together) — *The codebase from my intensive bootcamp, which I further enhanced by exploring **Virtual Threads** for concurrency, **Argon2** for security, custom error handling strategies, and more beyond the standard curriculum*
 
 ## 🏗 Architecture Decision Records (ADR)
 
