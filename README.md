@@ -76,9 +76,14 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 - **[Learning Spring Boot 3.0](https://www.packtpub.com/product/learning-spring-boot-30-third-edition/9781803233307)** by [Greg L. Turnquist](https://www.linkedin.com/in/greg-l-turnquist)
     - *Influence:* Offered me a Spring Boot practical perspective on **"Convention over Configuration"** and the **Spring Application Context**
     - *Implementation Log:* [fResult/Learning-Spring-Boot-3.0](https://github.com/fResult/Learning-Spring-Boot-3.0) — *Following the "Get Your Hands Dirty" philosophy, I manually implemented every pattern to internalize the framework's internal mechanics rather than relying on rote memorization*
-- **[Gout Together](https://github.com/fResult/Gout-Together)** (Java Backend Bootcamp) by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
-    - *Influence:* An intensive series that reinforced my **Foundational Understanding** of Java and Spring Boot
-    - *Enhanced Practice:* [fResult/Gout-Together](https://github.com/fResult/Gout-Together) — *The codebase from my intensive bootcamp, which I further enhanced by exploring **Virtual Threads** for concurrency, **Argon2** for security, custom error handling strategies, and more beyond the standard curriculum*
+- **[Gout Together](https://github.com/fResult/Gout-Together)** ([Java Backend Bootcamp [2024] YouTube Playlist](https://www.youtube.com/playlist?list=PLm3A9eDaMzukMQtdDoeOR-HbFN35vieQY)) by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
+    - *Influence (Career):* An intensive series that built my **Confidence** as a Java Developer.\
+        By coding along and heavily reviewing concepts, I gained the solid **Java & Spring Boot** understanding that allowed me to **ace technical interviews and land my Java Developer (Backend) role**.
+    - *Influence (Technical):* The **foundational turning point** for my understanding of **Real-World Unit Testing**.\
+        While I had encountered testing before, I often viewed it through a **"Coverage-First" lens** due to my own knowledge gaps—prioritizing metrics over behavioral verification.\
+        This series bridged that gap, teaching me to move beyond just "satisfying CI gates" to testing complex business logic effectively.\
+        It ensures my tests provide **Real Value** and long-term maintainability
+    - *Enhanced Practice:* [fResult/Gout-Together](https://github.com/fResult/Gout-Together?tab=readme-ov-file#my-summary) — *The codebase from my intensive bootcamp, which I further enhanced by exploring **Virtual Threads** for concurrency, **Argon2** for security, custom error handling strategies, and more beyond the standard curriculum*
 
 ## 🏗 Architecture Decision Records (ADR)
 
