@@ -23,9 +23,10 @@ import kotlin.test.assertContains
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.any
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.mock
+import org.mockito.kotlin.any
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.OptimisticLockingFailureException
 import reactor.core.publisher.Mono
@@ -106,7 +107,7 @@ class WalletPersistenceAdapterTest {
     val wallet = createWallet()
     val entity = createWalletEntity(wallet.id.value)
 
-    given(repository.save(any())).willReturn(Mono.just(entity))
+    given(repository.save(any<WalletEntity>())).willReturn(Mono.just(entity))
 
     // When
     val actualResult = adapter.save(wallet)
@@ -145,7 +146,7 @@ class WalletPersistenceAdapterTest {
     // Given
     val wallet = createWallet()
     given(
-      repository.save(any(WalletEntity::class.java)),
+      repository.save(any<WalletEntity>()),
     ).willReturn(Mono.error(RuntimeException("DB Error")))
 
     // When
@@ -167,7 +168,7 @@ class WalletPersistenceAdapterTest {
     val wallet = createWallet()
     val errorMessage = "Wallet with ID [${wallet.id.value}] already existed"
     given(
-      repository.save(any(WalletEntity::class.java)),
+      repository.save(any<WalletEntity>()),
     ).willReturn(Mono.error(DuplicateKeyException(errorMessage)))
 
     // When
@@ -180,6 +181,7 @@ class WalletPersistenceAdapterTest {
         val error = result.expectLeft("Should fail to save")
         assertInstanceOf(WalletAlreadyExistsException::class.java, error)
         error.message?.also { assertContains(it, wallet.id.value.toString()) }
+        assertInstanceOf(DuplicateKeyException::class.java, error.cause)
       }.verifyComplete()
   }
 
@@ -188,7 +190,7 @@ class WalletPersistenceAdapterTest {
     // Given
     val wallet = createWallet()
     given(
-      repository.save(any(WalletEntity::class.java)),
+      repository.save(any<WalletEntity>()),
     ).willReturn(Mono.error(OptimisticLockingFailureException("Version mismatch")))
 
     // When
@@ -209,10 +211,34 @@ class WalletPersistenceAdapterTest {
   }
 
   @Test
+  fun `save should return Left(WalletException) on data violation failure`() {
+    // Given
+    val dbErrorMessage = "DB Error"
+    val expectedErrorMessage = "Data Integrity Violation: $dbErrorMessage"
+    val wallet = createWallet()
+    given(
+      repository.save(any<WalletEntity>()),
+    ).willReturn(Mono.error(DataIntegrityViolationException(dbErrorMessage)))
+
+    // When
+    val actualResult = adapter.save(wallet)
+
+    // Then
+    StepVerifier
+      .create(actualResult)
+      .assertNext { result ->
+        val error = result.expectLeft("Should fail to save")
+        assertInstanceOf(WalletException::class.java, error)
+        assertEquals(expectedErrorMessage, error.message)
+        assertInstanceOf(DataIntegrityViolationException::class.java, error.cause)
+      }.verifyComplete()
+  }
+
+  @Test
   fun `save should handle empty Mono from repository (Safety Check)`() {
     // Given
     val wallet = createWallet()
-    given(repository.save(any(WalletEntity::class.java))).willReturn(Mono.empty())
+    given(repository.save(any<WalletEntity>())).willReturn(Mono.empty())
 
     // When
     val actualResult = adapter.save(wallet)
