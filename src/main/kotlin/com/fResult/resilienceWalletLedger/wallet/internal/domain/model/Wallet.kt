@@ -16,19 +16,15 @@ data class Wallet(
 ) {
   fun deposit(amount: Money): Either<WalletException, Wallet> {
     if (!amount.isPositive()) {
-      return Either.left(
-        WalletException(
-          "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
-        ),
-      )
+      return WalletException(
+        "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
+      ).let(toLeft)
     }
 
     if (currencyMismatched(amount)) {
-      return Either.left(
-        WalletException(
-          "Currency mismatch! Cannot deposit [${amount.currency}] to [${balance.currency}]",
-        ),
-      )
+      return WalletException(
+        "Currency mismatch! Cannot deposit [${amount.currency}] to [${balance.currency}]",
+      ).let(toLeft)
     }
 
     val balanceToDeposit = balance + amount
@@ -38,32 +34,28 @@ data class Wallet(
 
   fun withdraw(amount: Money): Either<WalletException, Wallet> {
     if (!amount.isPositive()) {
-      return Either.left(
-        WalletException(
-          "Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
-        ),
-      )
+      return WalletException(
+        "Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
+      ).let(toLeft)
     }
 
     if (currencyMismatched(amount)) {
-      return Either.left(
-        WalletException(
-          "Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]",
-        ),
-      )
+      return WalletException(
+        "Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]",
+      ).let(toLeft)
     }
     if (isInsufficient(amount)) {
-      return Either.left(
-        WalletBalanceInsufficientException(
-          "Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}",
-        ),
-      )
+      return WalletBalanceInsufficientException(
+        "Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}",
+      ).let(toLeft)
     }
 
     val balanceToWithdraw = balance - amount
 
     return Either.right(this.copy(balance = balanceToWithdraw, version = version + 1))
   }
+
+  private val toLeft: (WalletException) -> Either<WalletException, Wallet> = { Either.left(it) }
 
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
 
