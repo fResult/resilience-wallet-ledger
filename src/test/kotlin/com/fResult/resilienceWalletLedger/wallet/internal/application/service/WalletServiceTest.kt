@@ -8,10 +8,12 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import io.vavr.control.Either
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
@@ -23,11 +25,6 @@ import reactor.test.StepVerifier
 
 @ExtendWith(MockitoExtension::class)
 class WalletServiceTest {
-  private val expectedOwnerId = OwnerId.generate()
-  private val expectedWalletName = "My Wallet"
-  private val expectedBalance = Money(BigDecimal.ZERO, Currency.JPY)
-  private val expectedVersion = 1L
-
   @Mock
   private lateinit var walletRepository: WalletRepository
 
@@ -38,53 +35,108 @@ class WalletServiceTest {
     walletService = WalletService(walletRepository)
   }
 
-  @Test
-  fun `createWallet should return Right(Wallet) when persistence is successful`() {
-    // Given
-    mockSuccessfulPersistence(expectedVersion)
+  @Nested
+  inner class CreateWallet {
+    private val expectedOwnerId = OwnerId.generate()
+    private val expectedWalletName = "My Wallet"
+    private val expectedBalance = Money(BigDecimal.ZERO, Currency.JPY)
+    private val expectedVersion = 1L
 
-    // When
-    val actualResult =
-      walletService.createWallet(
-        expectedWalletName,
-        expectedOwnerId,
-        expectedBalance.currency,
-      )
+    @Test
+    fun `should return Right(Wallet) when persistence is successful`() {
+      // Given
+      mockSuccessfulPersistence(expectedVersion)
 
-    // Then
-    StepVerifier
-      .create(actualResult)
-      .assertNext { result ->
-        val createdWallet = result.expectRight("Wallet created successfully")
+      // When
+      val actualResult =
+        walletService.createWallet(
+          expectedWalletName,
+          expectedOwnerId,
+          expectedBalance.currency,
+        )
 
-        assertEquals(expectedOwnerId, createdWallet.ownerId)
-        assertEquals(expectedWalletName, createdWallet.name)
-        assertEquals(expectedBalance, createdWallet.balance)
-        assertEquals(expectedVersion, createdWallet.version)
-      }.verifyComplete()
+      // Then
+      StepVerifier
+        .create(actualResult)
+        .assertNext { result ->
+          val createdWallet = result.expectRight("Wallet created successfully")
+
+          assertEquals(expectedOwnerId, createdWallet.ownerId)
+          assertEquals(expectedWalletName, createdWallet.name)
+          assertEquals(expectedBalance, createdWallet.balance)
+          assertEquals(expectedVersion, createdWallet.version)
+        }.verifyComplete()
+    }
+
+    @Test
+    fun `should return Left(WalletException) should return failure`() {
+      // Given
+      val expectedErrorMessage = "Persistence failed"
+      mockFailurePersistence(WalletException(expectedErrorMessage))
+
+      // When
+      val actualResult =
+        walletService.createWallet(
+          expectedWalletName,
+          expectedOwnerId,
+          expectedBalance.currency,
+        )
+
+      // Then
+      StepVerifier
+        .create(actualResult)
+        .assertNext { result ->
+          val error = result.expectLeft("Wallet creation failed")
+          assertEquals(error.message, expectedErrorMessage)
+        }
+    }
   }
 
-  @Test
-  fun `createWallet should return Left(WalletException) should return failure`() {
-    // Given
-    val expectedErrorMessage = "Persistence failed"
-    mockFailurePersistence(WalletException(expectedErrorMessage))
+  @Nested
+  inner class Deposit {
+    @Test
+    fun `should return Right(Wallet) when deposit is successful`() {
+      // Given
+      val initialBalance = thb(1500)
+      val amountToDeposit = thb(500)
+      val expectedBalance = initialBalance + amountToDeposit
+      val existingWallet =
+        Wallet
+          .create(
+            expectedOwnerId,
+            expectedWalletName,
+            initialBalance.currency,
+          ).copy(balance = initialBalance)
+      val depositedResult =
+        existingWallet.copy(
+          balance = existingWallet.balance + amountToDeposit,
+          version =
+            existingWallet.version + 1,
+        )
 
-    // When
-    val actualResult =
-      walletService.createWallet(
-        expectedWalletName,
-        expectedOwnerId,
-        expectedBalance.currency,
-      )
+      given(
+        walletRepository.findById(any<WalletId>()),
+      ).willReturn(Mono.just(Either.right(existingWallet)))
+      given(existingWallet.deposit(amountToDeposit)).willReturn(Either.right(depositedResult))
+      given(
+        walletRepository.save(any<Wallet>()),
+      ).willReturn(Mono.just(Either.right(existingWallet)))
 
-    // Then
-    StepVerifier
-      .create(actualResult)
-      .assertNext { result ->
-        val error = result.expectLeft("Wallet creation failed")
-        assertEquals(error.message, expectedErrorMessage)
-      }
+      // When
+      val actualResult = walletService.deposit(existingWallet.id, amountToDeposit)
+
+      // Then
+      StepVerifier
+        .create(actualResult)
+        .assertNext { result ->
+          val actualResult = result.expectRight("Wallet created successfully")
+
+          assertEquals(expectedOwnerId, actualResult.ownerId)
+          assertEquals(expectedWalletName, actualResult.name)
+          assertEquals(expectedBalance, actualResult.balance)
+          assertEquals(expectedVersion, actualResult.version)
+        }.verifyComplete()
+    }
   }
 
   private fun mockSuccessfulPersistence(version: Long = 1L) {
@@ -100,4 +152,6 @@ class WalletServiceTest {
     given(walletRepository.save(any<Wallet>()))
       .willReturn(Mono.just(Either.left(cause)))
   }
+
+  private fun thb(amount: Int): Money = Money(amount.toBigDecimal(), Currency.THB)
 }
