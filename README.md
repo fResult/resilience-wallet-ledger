@@ -12,6 +12,17 @@ It follows DDD and Hexagonal Architecture principles.
 > While the code is open for study, I do not accept Pull Requests or provide support.\
 > It serves as a proof-of-concept for modern resilient architecture patterns.
 
+## 📑 Table of Contents
+
+- [📖 About This Project](#-about-this-project)
+- [🗺️ Roadmap & Status](#-roadmap--status)
+- [📚 Knowledge Lineage & Foundations](#-knowledge-lineage--foundations)
+- [🏗 Architecture Decision Records (ADR)](#-architecture-decision-records-adr)
+- [📋 Prerequisites](#-prerequisites)
+- [🚀 Getting Started](#-getting-started)
+- [🧪 Running Tests](#-running-tests)
+- [🧹 Code Style & Hygiene](#-code-style--hygiene)
+
 ## 📖 About This Project
 
 This is a real-world **practice project**.\
@@ -26,8 +37,8 @@ I haven't had many opportunities to touch high-performance backend work in my pr
 
 **Goal:**
 
-I started this project as a sandbox to apply concepts I have learned from 2023 until now.\
-Aiming to build a solid foundation for architecting real-world, scalable distributed systems in the future.
+I started this project as a **deliberate practice sandbox** to rigorously apply concepts I have accumulated from 2023 until now.\
+My aim is to build a solid foundation for architecting real-world, scalable distributed systems.
 
 ## 🗺️ Roadmap & Status
 
@@ -51,20 +62,19 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 *The core philosophy of Mathematical Predictability, Resilience, Scalability, and Message-Driven Architecture.*
 
 - **[Mathematics for Working Programmers](https://www.eventpop.me/e/6425/math-for-programmers)** (Series) by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/rawitat)
-    - *Influence:* Served as a **Thinking Framework** for structuring complex logic.\
-        It shifted my paradigm from just writing imperative instructions to designing flows that are **Predictable** and **Easy to Reason About**.\
-        (using concepts like Equational Reasoning and State Transitions)
+    - *Influence:* Served as a **Thinking Framework** grounded in **First Principles** (Lambda Calculus vs. Turing Machine).\
+        It shifted my paradigm from just writing instruction-based code to designing **Logical Structures** that are **Predictable** and **Easy to Reason About** (Equational Reasoning)
     - *Key Transformation:*
         - **From Accident to Intent:** Learned to eliminate ambiguity by replacing complex conditional chains with **Clear Predicates** and **State Transitions**, making the business logic explicit and readable
         - **Flow & Composition:** Adopted principles like **Low-Entropy** and **Immutability** to reduce cognitive load.\
             I use concepts from **Category Theory** (like *Functors* and *Monads*) as a practical **Design Patterns** to handle side effects and data transformation cleanly (e.g., Railway Oriented Programming)
-- **[Lightbend Reactive Architecture](https://cognitiveclass.ai/learn/reactive-architecture-advanced)** taught by [Wade Waldron](https://www.linkedin.com/in/wade-waldron)
+- **[Lightbend Reactive Architecture](https://cognitiveclass.ai/search?q=reactive+architecture)** (Learning Paths) taught by [Wade Waldron](https://www.linkedin.com/in/wade-waldron)
     - *Influence:* Provided the foundational mental model for building **Message-Driven, Resilient, and Elastic** systems.\
         It established the core principles of the **Reactive Manifesto** and how to decouple components through asynchrony and isolation
     - *Key Paths & Concepts:*
-        - **Foundations Path:** Mastered **Domain Driven Design (DDD)** for modeling bounded contexts and the **Hexagonal Architecture** pattern, which defines the core structure of this Ledger.\
+        - **[Foundations Path](https://cognitiveclass.ai/learn/reactive-architecture-foundations):** Mastered **Domain Driven Design (DDD)** for modeling bounded contexts and the **Hexagonal Architecture** pattern, which defines the core structure of this Ledger.\
             It also emphasized **Isolation** (State, Space, Time, and Failure) to ensure system-wide resilience
-        - **Advanced Path:** Focused on **Building Scalable Systems**, specifically the trade-offs between **Consistency and Availability (CAP Theorem)** and the **Laws of Scalability** (Amdahl’s and Gunther’s Laws), which are critical for designing a high-concurrency distributed system
+        - **[Advanced Path](https://cognitiveclass.ai/learn/reactive-architecture-advanced):** Focused on **Building Scalable Systems**, specifically the trade-offs between **Consistency and Availability (CAP Theorem)** and the **Laws of Scalability** (Amdahl’s and Gunther’s Laws), which are critical for designing a high-concurrency distributed system
 
 ### 🛠 Implementation Mastery (The "How")
 *The technical skills required to translate architecture into working code.*
@@ -76,14 +86,12 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 - **[Learning Spring Boot 3.0](https://www.packtpub.com/product/learning-spring-boot-30-third-edition/9781803233307)** by [Greg L. Turnquist](https://www.linkedin.com/in/greg-l-turnquist)
     - *Influence:* Offered me a Spring Boot practical perspective on **"Convention over Configuration"** and the **Spring Application Context**
     - *Implementation Log:* [fResult/Learning-Spring-Boot-3.0](https://github.com/fResult/Learning-Spring-Boot-3.0) — *Following the "Get Your Hands Dirty" philosophy, I manually implemented every pattern to internalize the framework's internal mechanics rather than relying on rote memorization*
-- **[Gout Together](https://github.com/fResult/Gout-Together)** ([Java Backend Bootcamp [2024] YouTube Playlist](https://www.youtube.com/playlist?list=PLm3A9eDaMzukMQtdDoeOR-HbFN35vieQY)) by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
-    - *Influence (Career):* An intensive series that built my **Confidence** as a Java Developer.\
-        By coding along and heavily reviewing concepts, I gained the solid **Java & Spring Boot** understanding that allowed me to **ace technical interviews and land my Java Developer (Backend) role**.
-    - *Influence (Technical):* The **foundational turning point** for my understanding of **Real-World Unit Testing**.\
-        While I had encountered testing before, I often viewed it through a **"Coverage-First" lens** due to my own knowledge gaps—prioritizing metrics over behavioral verification.\
-        This series bridged that gap, teaching me to move beyond just "satisfying CI gates" to testing complex business logic effectively.\
-        It ensures my tests provide **Real Value** and long-term maintainability
-    - *Enhanced Practice:* [fResult/Gout-Together](https://github.com/fResult/Gout-Together?tab=readme-ov-file#my-summary) — *The codebase from my intensive bootcamp, which I further enhanced by exploring **Virtual Threads** for concurrency, **Argon2** for security, custom error handling strategies, and more beyond the standard curriculum*
+- **[Gout Together](https://github.com/fResult/Gout-Together)** (Leaned from the[Java Backend Bootcamp [2024] YouTube Playlist](https://www.youtube.com/playlist?list=PLm3A9eDaMzukMQtdDoeOR-HbFN35vieQY)), taught by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
+    - *Influence (Career):* The **Critical Milestone** that transitioned me from a learner to a capable Java Developer.\
+        By rigorously reviewing concepts, I solidified the **Java & Spring Boot** expertise required to operate at a professional level
+    - *Influence (Technical):* The **foundational turning point** regarding **Test Engineering**.\
+        It shifted my mindset from a **"Coverage-First" lens** (satisfying CI gates) to **Behavioral Verification**.\
+        This series taught me to test complex business logic effectively, ensuring tests provide **Real Value** rather than just metrics
 
 ## 🏗 Architecture Decision Records (ADR)
 
@@ -104,30 +112,30 @@ To understand why we avoid Exceptions for business logic, imagine tracing a crit
 **1. The "Trapdoor" Nightmare (Exceptions)**
 
 In traditional code, a function like `chargeUser()` might look successful, but deep inside, it throws an Exception.
-- **The Problem:** The code execution **"teleports"** (jumps) from `chargeUser()` to a hidden `catch` block somewhere far away.
+- **The Problem:** The code execution **"teleports"** (jumps) from `chargeUser()` to a hidden `catch` block somewhere far away
 - **The Pain:** As developers, we can't *see* this jump just by reading the function signature\
-    It is an **invisible trapdoor**.
+    It is an **invisible trapdoor**
 
 **2. The "Railway" Clarity (Either)**
 
 With `Either`, the code looks like a linear railway track:
 - **The Solution:** If `chargeUser()` fails (returns `Left`), the train simply **switches tracks** to the error line.\
-    It stays on the rail but bypasses the subsequent stations.
+    It stays on the rail but bypasses the subsequent stations
 - **The Gain:** We can *see* the flow.\
     The failure path is just as explicit as the success path.\
-    No teleportation, no surprises.
-
-#### 💡 The Real-World Implementation
-
-Instead of guessing where the code might crash, we write code that reads like a business flowchart:
+    No teleportation, no surprises
 
 #### 🧠 Personal Reflection: Why Either?
 
 In my transition from Frontend to Backend, I found that traditional exception handling often created "Hidden Control Flows."\
-The function signature fun `process(): Wallet` implies guaranteed success, but it effectively "lies" if it throws a runtime exception.
+The function signature `fun process(): Wallet` implies guaranteed success, but it effectively "lies" if it throws a runtime exception.
 
 By adopting Railway-Oriented Programming, we force the function signature to tell the truth: `fun process(): Either<Failure, Wallet>`.\
 This explicitly states, "I might fail, and here is exactly how," forcing the caller to handle errors as Domain Data rather than unexpected crashes.
+
+#### 💡 The Real-World Implementation
+
+Instead of guessing where the code might crash, we write code that reads like a business flowchart:
 
 ```kotlin
 // Real-world code that acts as documentation
@@ -140,7 +148,7 @@ fun processPayment(cmd: PaymentCommand): Mono<Either<Failure, PaymentReceipt>> {
 }
 ```
 
-## Prerequisites
+## 📋 Prerequisites
 
 Install these tools before you start:
 
