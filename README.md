@@ -59,6 +59,22 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 
 ### 🧠 Architectural Foundations (The "Why")
 
+> [!quote]
+>
+> **Defining Performance:**\
+> "When I say 'Performance', I don't just mean nanosecond latency.\
+> I mean **Throughput** and **Resilience** under load.\
+> A fast system that calculates money wrong is just a fast way to go bankrupt."
+
+#### 🧘‍♂️ Core Philosophy
+
+*The guiding principles that shape every line of code.*
+
+- **High Reasonability & Low Entropy:** We hate accidental complexity. Code must be predictable.
+- **The "War Room" Test:** During an incident, code must be readable enough that a PO/BA can point to the failure line without translation. (Code as Documentation)
+
+#### Knowledge Lineage
+
 *The core philosophy of Mathematical Predictability, Resilience, Scalability, and Message-Driven Architecture.*
 
 - **[Mathematics for Working Programmers](https://www.eventpop.me/e/6425/math-for-programmers)** (Series) by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/rawitat)
@@ -112,18 +128,36 @@ To understand why we avoid Exceptions for business logic, imagine tracing a crit
 **1. The "Trapdoor" Nightmare (Exceptions)**
 
 In traditional code, a function like `chargeUser()` might look successful, but deep inside, it throws an Exception.
-- **The Problem:** The code execution **"teleports"** (jumps) from `chargeUser()` to a hidden `catch` block somewhere far away
-- **The Pain:** As developers, we can't *see* this jump just by reading the function signature\
-    It is an **invisible trapdoor**
+- **The Lie:** The signature `fun chargeUser(): Receipt` promises a Receipt, but it might blow up.
+- **The Teleport:** The code execution **"teleports"** (jumps) from `chargeUser()` to a hidden `catch` block somewhere far away.
+- **The Pain:** It is an **invisible trapdoor**. You can't see the error path.
 
 **2. The "Railway" Clarity (Either)**
 
 With `Either`, the code looks like a linear railway track:
-- **The Solution:** If `chargeUser()` fails (returns `Left`), the train simply **switches tracks** to the error line.\
-    It stays on the rail but bypasses the subsequent stations
-- **The Gain:** We can *see* the flow.\
-    The failure path is just as explicit as the success path.\
-    No teleportation, no surprises
+- **The Truth:** The signature `fun chargeUser(): Either<Failure, Receipt>` explicitly states "I might fail"
+- **The Switch:** If it fails (returns `Left`), the train simply **switches tracks** to the error line
+- **The Flow:** It stays on the rail. No teleportation. No surprises
+
+#### 💾 The "Commit the Failure" Strategy (Transaction Management)
+
+A common question: *"If you catch errors as `Left`, how does `@Transactional` rollback?"*
+
+**The Philosophy:** We distinguish between **System Errors** and **Business Results**
+
+1. **System Failures (e.g., DB Connection Lost):**
+    - These are **Exceptions**
+    - They bubble up and trigger `@Transactional` **ROLLBACK**
+    - The state remains consistent (nothing happened)
+
+2. **Business Failures (e.g., Insufficient Funds):**
+    - These are **Data** (`Either.Left`)
+        - We **COMMIT** the transaction
+        - **Why?** We must persist the "Rejection Event" (Audit Log/Outbox)
+        - A bank doesn't pretend a failed transaction never happened, it records a "Declined" entry
+    - **Exploration Area:** Transaction Management with `Either` & `Outbox`
+        - **Rule:** For Business Errors (`Left`), NEVER use `setRollbackOnly()`. We must commit the `FailureEvent`.
+        - **Rule:** For System Errors (Exceptions), allow standard Rollback.
 
 #### 🧠 Personal Reflection: Why Either?
 
@@ -161,7 +195,7 @@ Install these tools before you start:
 
 ### 1. Setup Git Hooks
 
-This project uses a *pre-commit hook* to enforce code style.\
+This project uses a *pre-commit hook* to enforce code style.
 
 Run this command once to install it:
 
@@ -173,10 +207,6 @@ Run this command if you need to format code by your hand:
 
 ```bash
 ./gradlew spotlessApply
-```
-
-```bash
-./gradlew 
 ```
 
 ### 2. Setup Docker Environment (Colima)
@@ -214,6 +244,7 @@ This project is tested heavily.\
 It uses Unit and Integration Tests.
 
 > [!note]
+>
 > Integration Tests utilize **Testcontainers**, which requires a running Docker environment.
 
 ```bash
