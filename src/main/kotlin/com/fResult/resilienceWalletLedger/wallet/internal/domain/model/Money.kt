@@ -1,12 +1,29 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
+import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
+import io.vavr.control.Either
 import java.math.BigDecimal
 
 data class Money(
   val amount: BigDecimal,
   val currency: Currency,
 ) {
+  init {
+    require(amount >= BigDecimal.ZERO) {
+      "Money cannot be negative, but was [$amount]"
+    }
+  }
+
   companion object {
+    fun of(
+      amount: BigDecimal,
+      currency: Currency,
+    ): Either<InvariantViolationException, Money> {
+      if (amount < BigDecimal.ZERO) {
+        return Either.left(InvariantViolationException("Currency cannot be smaller than zero"))
+      }
+    }
+
     fun zero(currency: Currency) = Money(BigDecimal.ZERO, currency)
   }
 

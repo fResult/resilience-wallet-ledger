@@ -17,7 +17,7 @@ It follows DDD and Hexagonal Architecture principles.
 - [📖 About This Project](#-about-this-project)
 - [🗺️ Roadmap & Status](#-roadmap--status)
 - [📚 Knowledge Lineage & Foundations](#-knowledge-lineage--foundations)
-- [🏗 Architecture Decision Records (ADR)](#-architecture-decision-records-adr)
+- [🏛 Key Design Concepts](#-key-design-concepts)
 - [📋 Prerequisites](#-prerequisites)
 - [🚀 Getting Started](#-getting-started)
 - [🧪 Running Tests](#-running-tests)
@@ -100,7 +100,7 @@ This project is not built in a vacuum. It is the culmination of intensive study 
     - *Modernization Practice:* [fResult/Learn-Spring-Webflux-3.0](https://github.com/fResult/Learn-Spring-Webflux-3.0) — *I adapted the original Java 17/Maven examples into a **Bleeding Edge Stack** (Java 24, Spring Boot 3.5-4.0, Gradle Kotlin DSL).\
         Restructured as a **Monorepo with Composite Builds** to better understand modern build-tool mechanics*
 - **[Learning Spring Boot 3.0](https://www.packtpub.com/product/learning-spring-boot-30-third-edition/9781803233307)** by [Greg L. Turnquist](https://www.linkedin.com/in/greg-l-turnquist)
-    - *Influence:* Offered me a Spring Boot practical perspective on **"Convention over Configuration"** and the **Spring Application Context**
+    - *Influence:* Offered a practical perspective on **"Convention over Configuration"** and the **Spring Application Context**
     - *Implementation Log:* [fResult/Learning-Spring-Boot-3.0](https://github.com/fResult/Learning-Spring-Boot-3.0) — *Following the "Get Your Hands Dirty" philosophy, I manually implemented every pattern to internalize the framework's internal mechanics rather than relying on rote memorization*
 - **[Gout Together](https://github.com/fResult/Gout-Together)** (Leaned from the[Java Backend Bootcamp [2024] YouTube Playlist](https://www.youtube.com/playlist?list=PLm3A9eDaMzukMQtdDoeOR-HbFN35vieQY)), taught by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
     - *Influence (Career):* The **Critical Milestone** that transitioned me from a learner to a capable Java Developer.\
@@ -109,7 +109,7 @@ This project is not built in a vacuum. It is the culmination of intensive study 
         It shifted my mindset from a **"Coverage-First" lens** (satisfying CI gates) to **Behavioral Verification**.\
         This series taught me to test complex business logic effectively, ensuring tests provide **Real Value** rather than just metrics
 
-## 🏗 Architecture Decision Records (ADR)
+## 🏛 Key Design Concepts
 
 ### Hexagonal Architecture + Domain-Driven Design (DDD)
 
