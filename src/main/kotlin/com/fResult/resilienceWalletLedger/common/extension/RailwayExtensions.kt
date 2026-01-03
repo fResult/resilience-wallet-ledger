@@ -11,6 +11,12 @@ import org.springframework.http.ProblemDetail
 import reactor.core.publisher.Mono
 
 /**
+ * Generic Extension to wrap any RuntimeException into Either.Left
+ * Usage: MyException(...).toLeft()
+ */
+fun <L : RuntimeException, R> L.toLeft(): Either<L, R> = Either.left(this)
+
+/**
  * 🔵 For Queries (findById, findOne): High Strictness
  * Transforms Mono<T> into Either.Right<T>.
  * - If Empty: Maps to Either.Left via [onEmpty] (e.g., WalletNotFound).
