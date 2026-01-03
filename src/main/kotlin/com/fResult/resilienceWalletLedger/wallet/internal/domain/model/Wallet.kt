@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
+import com.fResult.resilienceWalletLedger.common.extension.toLeft
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import io.vavr.control.Either
@@ -18,44 +19,42 @@ data class Wallet(
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
-      ).let(toLeft)
+      ).toLeft()
     }
 
     if (currencyMismatched(amount)) {
       return WalletException(
         "Currency mismatch! Cannot deposit [${amount.currency}] to [${balance.currency}]",
-      ).let(toLeft)
+      ).toLeft()
     }
 
     val balanceToDeposit = balance + amount
 
-    return Either.right(this.copy(balance = balanceToDeposit, version = version + 1))
+    return Either.right(this.copy(balance = balanceToDeposit))
   }
 
   fun withdraw(amount: Money): Either<WalletException, Wallet> {
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
-      ).let(toLeft)
+      ).toLeft()
     }
 
     if (currencyMismatched(amount)) {
       return WalletException(
         "Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]",
-      ).let(toLeft)
+      ).toLeft()
     }
     if (isInsufficient(amount)) {
       return WalletBalanceInsufficientException(
         "Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}",
-      ).let(toLeft)
+      ).toLeft()
     }
 
     val balanceToWithdraw = balance - amount
 
-    return Either.right(this.copy(balance = balanceToWithdraw, version = version + 1))
+    return Either.right(this.copy(balance = balanceToWithdraw))
   }
-
-  private val toLeft: (WalletException) -> Either<WalletException, Wallet> = { Either.left(it) }
 
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
 
