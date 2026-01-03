@@ -8,7 +8,6 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import io.vavr.control.Either
 import java.math.BigDecimal
 import kotlin.test.assertEquals
@@ -97,30 +96,29 @@ class WalletServiceTest {
     @Test
     fun `should return Right(Wallet) when deposit is successful`() {
       // Given
+      val ownerId = OwnerId.generate()
       val initialBalance = thb(1500)
+      val initialVersion = 3L
       val amountToDeposit = thb(500)
       val expectedBalance = initialBalance + amountToDeposit
+      val expectedVersion = 4L
       val existingWallet =
         Wallet
           .create(
-            expectedOwnerId,
-            expectedWalletName,
+            ownerId,
+            "My Wallet",
             initialBalance.currency,
-          ).copy(balance = initialBalance)
-      val depositedResult =
-        existingWallet.copy(
-          balance = existingWallet.balance + amountToDeposit,
-          version =
-            existingWallet.version + 1,
-        )
+          ).copy(balance = initialBalance, version = initialVersion)
 
       given(
-        walletRepository.findById(any<WalletId>()),
+        walletRepository.findById(existingWallet.id),
       ).willReturn(Mono.just(Either.right(existingWallet)))
-      given(existingWallet.deposit(amountToDeposit)).willReturn(Either.right(depositedResult))
-      given(
-        walletRepository.save(any<Wallet>()),
-      ).willReturn(Mono.just(Either.right(existingWallet)))
+
+      given(walletRepository.save(any<Wallet>())).willAnswer { invocation ->
+        val walletBeingDeposited = invocation.getArgument<Wallet>(0)
+        val depositedWallet = walletBeingDeposited.copy(version = walletBeingDeposited.version + 1)
+        Mono.just(Either.right<WalletException, Wallet>(depositedWallet))
+      }
 
       // When
       val actualResult = walletService.deposit(existingWallet.id, amountToDeposit)
@@ -129,12 +127,14 @@ class WalletServiceTest {
       StepVerifier
         .create(actualResult)
         .assertNext { result ->
-          val actualResult = result.expectRight("Wallet created successfully")
+          val actualResult = result.expectRight("Should deposit successfully")
 
-          assertEquals(expectedOwnerId, actualResult.ownerId)
-          assertEquals(expectedWalletName, actualResult.name)
-          assertEquals(expectedBalance, actualResult.balance)
-          assertEquals(expectedVersion, actualResult.version)
+          assertEquals(
+            expectedBalance,
+            actualResult.balance,
+            "Balance should be ${amountToDeposit.amount}",
+          )
+          assertEquals(expectedVersion, actualResult.version, "Version should increment")
         }.verifyComplete()
     }
   }
