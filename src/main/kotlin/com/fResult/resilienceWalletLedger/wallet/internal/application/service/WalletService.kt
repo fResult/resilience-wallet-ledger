@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.application.service
 
+import com.fResult.resilienceWalletLedger.common.extension.toLeft
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
@@ -23,7 +24,17 @@ class WalletService(
   fun deposit(
     walletId: WalletId,
     amountToDeposit: Money,
-  ): Mono<Either<WalletException, Wallet>> {
-    TODO("Not yet implemented")
-  }
+  ): Mono<Either<WalletException, Wallet>> =
+    walletRepository.findById(walletId).flatMap { findResult ->
+      findResult
+        .flatMap { existingWallet -> existingWallet.deposit(amountToDeposit) }
+        .fold(
+          { domainError ->
+            // Naive Deposit Failed (Rule) Transformation
+            val ex = WalletException(domainError.message)
+            Mono.just(ex.toLeft())
+          },
+          walletRepository::save,
+        )
+    }
 }
