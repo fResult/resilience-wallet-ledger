@@ -59,11 +59,11 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 
 ### 🧠 Architectural Foundations (The "Why")
 
-> [!quote]
+> [!important]
 >
 > **Defining Performance:**\
 > "When I say 'Performance', I don't just mean nanosecond latency.\
-> I mean **Throughput** and **Resilience** under load.\
+> I also mean **Throughput** and **Resilience** under load.\
 > A fast system that calculates money wrong is just a fast way to go bankrupt."
 
 #### 🧘‍♂️ Core Philosophy
@@ -77,29 +77,29 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 
 *The core philosophy of Mathematical Predictability, Resilience, Scalability, and Message-Driven Architecture.*
 
-- **[Mathematics for Working Programmers](https://www.eventpop.me/e/6425/math-for-programmers)** (Series) by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/rawitat)
+- **[Mathematics for Working Programmers](https://www.eventpop.me/e/6425/math-for-programmers)** (Series), facilitated by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/rawitat)
     - *Influence:* Served as a **Thinking Framework** grounded in **First Principles** (Lambda Calculus vs. Turing Machine).\
         It shifted my paradigm from just writing instruction-based code to designing **Logical Structures** that are **Predictable** and **Easy to Reason About** (Equational Reasoning)
     - *Key Transformation:*
         - **From Accident to Intent:** Learned to eliminate ambiguity by replacing complex conditional chains with **Clear Predicates** and **State Transitions**, making the business logic explicit and readable
         - **Flow & Composition:** Adopted principles like **Low-Entropy** and **Immutability** to reduce cognitive load.\
             I use concepts from **Category Theory** (like *Functors* and *Monads*) as a practical **Design Patterns** to handle side effects and data transformation cleanly (e.g., Railway Oriented Programming)
-- **[Lightbend Reactive Architecture](https://cognitiveclass.ai/search?q=reactive+architecture)** (Learning Paths) taught by [Wade Waldron](https://www.linkedin.com/in/wade-waldron)
+- **[Lightbend Reactive Architecture](https://cognitiveclass.ai/search?q=reactive+architecture)** (Learning Paths), taught by [Wade Waldron](https://www.linkedin.com/in/wade-waldron)
     - *Influence:* Provided the foundational mental model for building **Message-Driven, Resilient, and Elastic** systems.\
         It established the core principles of the **Reactive Manifesto** and how to decouple components through asynchrony and isolation
     - *Key Paths & Concepts:*
         - **[Foundations Path](https://cognitiveclass.ai/learn/reactive-architecture-foundations):** Mastered **Domain Driven Design (DDD)** for modeling bounded contexts and the **Hexagonal Architecture** pattern, which defines the core structure of this Ledger.\
             It also emphasized **Isolation** (State, Space, Time, and Failure) to ensure system-wide resilience
-        - **[Advanced Path](https://cognitiveclass.ai/learn/reactive-architecture-advanced):** Focused on **Building Scalable Systems**, specifically the trade-offs between **Consistency and Availability (CAP Theorem)** and the **Laws of Scalability** (Amdahl’s and Gunther’s Laws), which are critical for designing a high-concurrency distributed system
+        - **[Advanced Path](https://cognitiveclass.ai/learn/reactive-architecture-advanced):** Focused on [**Building Scalable Systems**](https://cognitiveclass.ai/courses/reactive-architecture-building-scalable-systems), specifically the trade-offs between **Consistency and Availability (CAP Theorem)** and the **Laws of Scalability** (Amdahl’s and Gunther’s Laws), which are critical for designing a high-concurrency distributed system
 
 ### 🛠 Implementation Mastery (The "How")
 *The technical skills required to translate architecture into working code.*
 
-- **[Reactive Spring](https://leanpub.com/reactive-spring)** by [Josh Long](https://www.linkedin.com/in/joshlong)
+- **[Reactive Spring](https://leanpub.com/reactive-spring)**, authored by [Josh Long](https://www.linkedin.com/in/joshlong)
     - *Influence:* A valuable guide for **Testing Reactive Systems** and mastering `StepVerifier`
     - *Modernization Practice:* [fResult/Learn-Spring-Webflux-3.0](https://github.com/fResult/Learn-Spring-Webflux-3.0) — *I adapted the original Java 17/Maven examples into a **Bleeding Edge Stack** (Java 24, Spring Boot 3.5-4.0, Gradle Kotlin DSL).\
         Restructured as a **Monorepo with Composite Builds** to better understand modern build-tool mechanics*
-- **[Learning Spring Boot 3.0](https://www.packtpub.com/product/learning-spring-boot-30-third-edition/9781803233307)** by [Greg L. Turnquist](https://www.linkedin.com/in/greg-l-turnquist)
+- **[Learning Spring Boot 3.0](https://www.packtpub.com/product/learning-spring-boot-30-third-edition/9781803233307)**, authored by [Greg L. Turnquist](https://www.linkedin.com/in/greg-l-turnquist)
     - *Influence:* Offered a practical perspective on **"Convention over Configuration"** and the **Spring Application Context**
     - *Implementation Log:* [fResult/Learning-Spring-Boot-3.0](https://github.com/fResult/Learning-Spring-Boot-3.0) — *Following the "Get Your Hands Dirty" philosophy, I manually implemented every pattern to internalize the framework's internal mechanics rather than relying on rote memorization*
 - **[Gout Together](https://github.com/fResult/Gout-Together)** (Leaned from the[Java Backend Bootcamp [2024] YouTube Playlist](https://www.youtube.com/playlist?list=PLm3A9eDaMzukMQtdDoeOR-HbFN35vieQY)), taught by [Thanaphoom Babparn](https://www.linkedin.com/in/thanaphoom-babparn)
