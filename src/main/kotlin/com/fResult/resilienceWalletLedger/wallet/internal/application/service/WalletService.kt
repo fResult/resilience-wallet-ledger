@@ -23,18 +23,19 @@ class WalletService(
 
   fun deposit(
     walletId: WalletId,
-    amountToDeposit: Money,
+    amount: Money,
   ): Mono<Either<WalletException, Wallet>> =
-    walletRepository.findById(walletId).flatMap { findResult ->
-      findResult
-        .flatMap { existingWallet -> existingWallet.deposit(amountToDeposit) }
+    walletRepository.findById(walletId).flatMap { walletOrError ->
+      walletOrError
+        .flatMap(depositing(amount))
         .fold(
           { domainError ->
-            // Naive Deposit Failed (Rule) Transformation
-            val ex = WalletException(domainError.message)
-            Mono.just(ex.toLeft())
+            Mono.just(domainError.toLeft())
           },
           walletRepository::save,
         )
     }
+
+  private fun depositing(amount: Money): (Wallet) -> Either<WalletException, Wallet> =
+    { it.deposit(amount) }
 }
