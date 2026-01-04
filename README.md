@@ -62,9 +62,9 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 > [!important]
 >
 > **Defining Performance:**\
-> "When I say 'Performance', I don't just mean nanosecond latency.\
+> When I say "Performance", I don't just mean nanosecond latency.\
 > I also mean **Throughput** and **Resilience** under load.\
-> A fast system that calculates money wrong is just a fast way to go bankrupt."
+> A fast system that calculates money wrong is just a fast way to go bankrupt.
 
 #### 🧘‍♂️ Core Philosophy
 
@@ -81,9 +81,9 @@ This project is not built in a vacuum. It is the culmination of intensive study 
             *(Biz Speak: Logic encapsulated, reads like a sentence)*
     - *Note: Infrastructure details (DB, API calls) are exempt and could be abstracted away*
 
-#### Knowledge Lineage
+#### 🏛️ External Influences & Roots
 
-*The core philosophy of Mathematical Predictability, Resilience, Scalability, and Message-Driven Architecture.*
+*The giants we stand on: Mathematical Predictability, Resilience, Scalability, and Message-Driven Architecture.*
 
 - **[Mathematics for Working Programmers](https://www.eventpop.me/e/6425/math-for-programmers)** (Series), facilitated by [Rawitat Pulam (Lect. Dave)](https://www.facebook.com/rawitat)
     - *Influence:* Served as a **Thinking Framework** grounded in **First Principles** (Lambda Calculus vs. Turing Machine).\

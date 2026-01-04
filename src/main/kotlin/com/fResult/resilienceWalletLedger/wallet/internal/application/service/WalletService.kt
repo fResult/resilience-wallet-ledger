@@ -9,6 +9,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import io.vavr.control.Either
+import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
 
 class WalletService(
@@ -21,6 +22,7 @@ class WalletService(
   ): Mono<Either<WalletException, Wallet>> =
     Wallet.create(ownerId, walletName, currency).let(walletRepository::save)
 
+  @Transactional
   fun deposit(
     walletId: WalletId,
     amount: Money,
@@ -30,8 +32,14 @@ class WalletService(
         .flatMap(depositing(amount))
         .fold(
           { domainError ->
+            /*
+             * TODO: [Outbox]
+             * 1. Create `DepositFailedEvent` (`eventId`, `walletId`, `amount`, `reason`)
+             * 2. Save event to Outbox Repository (Must commit transaction, DON'T rollback)
+             */
             Mono.just(domainError.toLeft())
           },
+          // TODO: [Outbox] Save DepositCompletedEvent to Outbox Repository
           walletRepository::save,
         )
     }
