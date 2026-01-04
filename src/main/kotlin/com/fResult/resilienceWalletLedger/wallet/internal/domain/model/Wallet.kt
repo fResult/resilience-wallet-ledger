@@ -45,7 +45,7 @@ data class Wallet(
         "Currency mismatch! Cannot withdraw [${amount.currency}] from [${balance.currency}]",
       ).toLeft()
     }
-    if (isInsufficient(amount)) {
+    if (hasInsufficientFunds(amount)) {
       return WalletBalanceInsufficientException(
         "Insufficient Balance! Cannot withdraw ${amount.amount} ${amount.currency}",
       ).toLeft()
@@ -58,7 +58,7 @@ data class Wallet(
 
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
 
-  private fun isInsufficient(money: Money): Boolean = balance.amount < money.amount
+  private fun hasInsufficientFunds(money: Money): Boolean = balance.amount < money.amount
 
   companion object {
     fun create(

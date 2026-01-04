@@ -71,7 +71,15 @@ This project is not built in a vacuum. It is the culmination of intensive study 
 *The guiding principles that shape every line of code.*
 
 - **High Reasonability & Low Entropy:** We hate accidental complexity. Code must be predictable.
-- **The "War Room" Test:** During an incident, code must be readable enough that a PO/BA can point to the failure line without translation. (Code as Documentation)
+- **The "War Room" Test (Domain-First):**
+    - During an incident, the **Domain Layer** must be readable enough that a PO/BA can understand the logic *without* needing a translator
+        - ❌ **Cryptic (Bad):** `if (w.st == 2 && tx.amt > w.bal)`\
+            *(Dev Speak: Magic numbers, abbreviations, cognitive load)*
+        - ⚠️ **Anemic (Better):** `if (wallet.status == WalletStatus.FROZEN || transaction.amount > wallet.balance)`\
+            *(Clear Naming: Readable variables, but logic is exposed/leaking)*
+        - ✅ **Rich (Recommended):** `if (wallet.isFrozen() || wallet.hasInsufficientFunds(transaction))`\
+            *(Biz Speak: Logic encapsulated, reads like a sentence)*
+    - *Note: Infrastructure details (DB, API calls) are exempt and could be abstracted away*
 
 #### Knowledge Lineage
 
