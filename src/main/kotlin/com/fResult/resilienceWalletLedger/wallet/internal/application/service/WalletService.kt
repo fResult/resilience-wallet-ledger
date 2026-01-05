@@ -27,23 +27,38 @@ class WalletService(
     walletId: WalletId,
     amount: Money,
   ): Mono<Either<WalletException, Wallet>> =
-    walletRepository.findById(walletId).flatMap { walletOrError ->
-      walletOrError
-        .flatMap(depositing(amount))
-        .fold(
-          { domainError ->
-            /*
-             * TODO: [Outbox]
-             * 1. Create `DepositFailedEvent` (`eventId`, `walletId`, `amount`, `reason`)
-             * 2. Save event to Outbox Repository (Must commit transaction, DON'T rollback)
-             */
-            Mono.just(domainError.toLeft())
-          },
-          // TODO: [Outbox] Save DepositCompletedEvent to Outbox Repository
-          walletRepository::save,
-        )
-    }
+    walletRepository
+      .findById(walletId)
+      .map { it.flatMap(depositing(amount)) }
+      .flatMap(::persist)
+
+  @Transactional
+  fun withdraw(
+    walletId: WalletId,
+    amount: Money,
+  ): Mono<Either<WalletException, Wallet>> =
+    walletRepository
+      .findById(walletId)
+      .map { it.flatMap(withdrawing(amount)) }
+      .flatMap(::persist)
+
+  private fun withdrawing(amount: Money): (Wallet) -> Either<WalletException, Wallet> =
+    { it.withdraw(amount) }
 
   private fun depositing(amount: Money): (Wallet) -> Either<WalletException, Wallet> =
     { it.deposit(amount) }
+
+  private fun persist(
+    walletOrError: Either<WalletException, Wallet>,
+  ): Mono<Either<WalletException, Wallet>> =
+    walletOrError.fold(
+      /*
+       * TODO: [Outbox]
+       * 1. Create `DepositFailedEvent` (`eventId`, `walletId`, `amount`, `reason`)
+       * 2. Save event to Outbox Repository (Must commit transaction, DON'T rollback)
+       */
+      { Mono.just(it.toLeft()) },
+      // TODO: [Outbox] Save `DepositCompletedEvent` to Outbox Respository
+      walletRepository::save,
+    )
 }
