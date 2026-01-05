@@ -276,6 +276,7 @@ class WalletPersistenceAdapterTest {
       linkedBankAccountId = mockBankAccountId,
       ownerId = mockOwnerId,
       status = WalletStatus.ACTIVE,
+      createdAt = Instant.now(),
       version = 1L,
     )
 }

@@ -64,6 +64,7 @@ class WalletPersistenceAdapter(
       linkedBankAccountId = entity.linkedBankAccountId?.let(::BankAccountId),
       ownerId = OwnerId(entity.ownerId),
       status = WalletStatus.valueOf(entity.status),
+      createdAt = entity.createdAt ?: Instant.now(),
       version = entity.version ?: 0L,
     )
 
@@ -78,10 +79,7 @@ class WalletPersistenceAdapter(
       status = domain.status.name,
       // version is `null` for new entity (Optimistic Lock)
       version = if (domain.version == 0L) null else domain.version,
-      /**
-       * FIXME: If update, `createdAt will be always overridden as Now
-       */
-      createdAt = Instant.now(),
+      createdAt = domain.createdAt,
       updatedAt = Instant.now(),
     )
 

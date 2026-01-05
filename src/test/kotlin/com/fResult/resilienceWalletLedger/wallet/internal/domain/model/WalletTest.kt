@@ -4,6 +4,7 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
+import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
@@ -142,7 +143,8 @@ class WalletTest {
       balance = balance,
       linkedBankAccountId = linkedBankAccountId,
       ownerId = ownerId,
-      WalletStatus.ACTIVE,
+      status = WalletStatus.ACTIVE,
+      createdAt = Instant.now(),
     )
 
   private fun usd(amount: Int): Money = Money(BigDecimal(amount), Currency.USD)

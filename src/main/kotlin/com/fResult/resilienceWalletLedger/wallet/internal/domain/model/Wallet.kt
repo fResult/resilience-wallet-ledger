@@ -5,6 +5,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.Walle
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import io.vavr.control.Either
 import java.math.BigDecimal
+import java.time.Instant
 
 data class Wallet(
   val id: WalletId,
@@ -13,6 +14,7 @@ data class Wallet(
   val linkedBankAccountId: BankAccountId?,
   val ownerId: OwnerId,
   val status: WalletStatus,
+  val createdAt: Instant,
   val version: Long = 0,
 ) {
   fun deposit(amount: Money): Either<WalletException, Wallet> {
@@ -71,6 +73,7 @@ data class Wallet(
       balance = Money(BigDecimal.ZERO, currency),
       ownerId = ownerId,
       status = WalletStatus.ACTIVE,
+      createdAt = Instant.now(),
       version = 0L,
       linkedBankAccountId = null,
     )
