@@ -8,8 +8,7 @@ import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.api.assertThrows
 
 class WalletTest {
   private val walletId = WalletId.generate()
@@ -20,7 +19,7 @@ class WalletTest {
   fun `deposit positive amount should increase balance and version`() {
     // Given
     val initialWallet = createActiveUsdWallet(1000)
-    val expectedResult = initialWallet.copy(balance = usd(1100), version = 1)
+    val expectedResult = initialWallet.copy(balance = usd(1100))
     val depositAmount = usd(100)
 
     // When
@@ -47,10 +46,10 @@ class WalletTest {
     assertEquals(expectedErrorMessage, actualError.message)
   }
 
-  @ParameterizedTest
-  @CsvSource("-1", "0")
-  fun `deposit zero or negative amount should fail`(invalidAmount: Int) {
+  @Test
+  fun `deposit zero amount should fail`() {
     // Given
+    val invalidAmount = 0
     val expectedErrorMessage =
       "Invalid deposit amount: [$invalidAmount ${Currency.USD}]. Must be greater than zero"
     val initialWallet = createActiveUsdWallet(100)
@@ -65,10 +64,24 @@ class WalletTest {
   }
 
   @Test
+  fun `deposit negative amount should fail`() {
+    // Given
+    val invalidAmount = -1
+    val expectedErrorMessage = "Money amount must be non-negative, but got: $invalidAmount"
+
+    // When
+    val executable: () -> Unit = { thb(invalidAmount) }
+
+    // Then
+    val actualError = assertThrows<IllegalArgumentException>(executable)
+    assertEquals(expectedErrorMessage, actualError.message)
+  }
+
+  @Test
   fun `withdraw positive amount should decrease balance and increase version`() {
     // Given
     val initialWallet = createActiveUsdWallet(1000)
-    val expectedResult = initialWallet.copy(balance = usd(900), version = 1)
+    val expectedResult = initialWallet.copy(balance = usd(900))
     val withdrawalAmount = usd(100)
 
     // When
@@ -79,10 +92,10 @@ class WalletTest {
     assertEquals(expectedResult, actualResult)
   }
 
-  @ParameterizedTest
-  @CsvSource("-1", "0")
-  fun `withdraw zero or negative amount should fail`(invalidAmount: Int) {
+  @Test
+  fun `withdraw zero amount should fail`() {
     // Given
+    val invalidAmount = 0
     val expectedErrorMessage =
       "Invalid withdraw amount: [$invalidAmount ${Currency.USD}]. Must be greater than zero"
     val initialWallet = createActiveUsdWallet(100)
@@ -94,6 +107,20 @@ class WalletTest {
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")
     assertEquals(expectedErrorMessage, actualError.message)
+  }
+
+  @Test
+  fun `withdraw negative amount should fail`() {
+    // Given
+    val invalidAmount = -1
+    val expectedErrorMessage = "Money amount must be non-negative, but got: $invalidAmount"
+
+    // When
+    val executable: () -> Unit = { usd(invalidAmount) }
+
+    // Then
+    val actualException = assertThrows<IllegalArgumentException>(executable)
+    assertEquals(expectedErrorMessage, actualException.message)
   }
 
   @Test
@@ -145,6 +172,7 @@ class WalletTest {
       ownerId = ownerId,
       status = WalletStatus.ACTIVE,
       createdAt = Instant.now(),
+      version = 0,
     )
 
   private fun usd(amount: Int): Money = Money(BigDecimal(amount), Currency.USD)
