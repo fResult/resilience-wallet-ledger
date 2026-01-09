@@ -16,7 +16,7 @@ class WalletTest {
   private val linkedBankAccountId = BankAccountId.generate()
 
   @Test
-  fun `deposit positive amount should increase balance and version`() {
+  fun `deposit with positive amount should succeed and increase balance`() {
     // Given
     val initialWallet = createActiveUsdWallet(1000)
     val expectedResult = initialWallet.copy(balance = usd(1100))
@@ -31,7 +31,7 @@ class WalletTest {
   }
 
   @Test
-  fun `deposit different currency should fail`() {
+  fun `deposit should reject different currency`() {
     // Given
     val expectedErrorMessage =
       "Currency mismatch! Cannot deposit [${Currency.THB}] to [${Currency.USD}]"
@@ -47,7 +47,7 @@ class WalletTest {
   }
 
   @Test
-  fun `deposit zero amount should fail`() {
+  fun `deposit should reject zero amount`() {
     // Given
     val invalidAmount = 0
     val expectedErrorMessage =
@@ -64,7 +64,7 @@ class WalletTest {
   }
 
   @Test
-  fun `deposit negative amount should fail`() {
+  fun `deposit should throw exception when amount is negative`() {
     // Given
     val invalidAmount = -1
     val expectedErrorMessage = "Money amount must be non-negative, but got: $invalidAmount"
@@ -78,7 +78,7 @@ class WalletTest {
   }
 
   @Test
-  fun `withdraw positive amount should decrease balance and increase version`() {
+  fun `withdraw with positive amount should succeed and decrease balance`() {
     // Given
     val initialWallet = createActiveUsdWallet(1000)
     val expectedResult = initialWallet.copy(balance = usd(900))
@@ -93,7 +93,7 @@ class WalletTest {
   }
 
   @Test
-  fun `withdraw zero amount should fail`() {
+  fun `withdraw should reject zero amount`() {
     // Given
     val invalidAmount = 0
     val expectedErrorMessage =
@@ -110,7 +110,7 @@ class WalletTest {
   }
 
   @Test
-  fun `withdraw negative amount should fail`() {
+  fun `withdraw should throw exception when amount is negative`() {
     // Given
     val invalidAmount = -1
     val expectedErrorMessage = "Money amount must be non-negative, but got: $invalidAmount"
@@ -124,7 +124,7 @@ class WalletTest {
   }
 
   @Test
-  fun `withdraw different currency should fail`() {
+  fun `withdraw should reject different currency`() {
     // Given
     val expectedErrorMessage =
       "Currency mismatch! Cannot withdraw [${Currency.THB}] from [${Currency.USD}]"
@@ -140,7 +140,7 @@ class WalletTest {
   }
 
   @Test
-  fun `withdraw insufficient funds should fail`() {
+  fun `withdraw should reject insufficient funds`() {
     // Given
     val initialBalanceAmount = 100
     val withdrawAmountVal = 1000
