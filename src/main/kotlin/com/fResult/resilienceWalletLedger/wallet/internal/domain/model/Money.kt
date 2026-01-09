@@ -21,7 +21,9 @@ data class Money(
       currency: Currency,
     ): Either<InvariantViolationException, Money> {
       if (amount < BigDecimal.ZERO) {
-        return Either.left(InvariantViolationException("Currency cannot be smaller than zero"))
+        return Either.left(
+          InvariantViolationException("Currency cannot be smaller than zero, but got $amount"),
+        )
       }
 
       return Either.right(Money(amount, currency))
