@@ -58,7 +58,7 @@ class WalletService(
        * 2. Save event to Outbox Repository (Must commit transaction, DON'T rollback)
        */
       { Mono.just(it.toLeft()) },
-      // TODO: [Outbox] Save `DepositCompletedEvent` to Outbox Respository
+      // TODO: [Outbox] Save `DepositCompletedEvent` to Outbox Repository
       walletRepository::save,
     )
 }

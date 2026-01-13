@@ -15,6 +15,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(24) } }
 repositories { mavenCentral() }
 
 val vavrVersion = "0.11.0"
+val uuidGeneratorVersion = "5.2.0"
 val mockitoKotlinVersion = "6.1.0"
 // val testcontainersVersion = "2.0.3"
 
@@ -29,6 +30,7 @@ dependencies {
   implementation("tools.jackson.module:jackson-module-kotlin")
   // Upgrade to Vavr 1.0.0 if available
   implementation("io.vavr:vavr:$vavrVersion")
+  implementation("com.fasterxml.uuid:java-uuid-generator:$uuidGeneratorVersion")
 
   runtimeOnly("org.postgresql:postgresql")
   runtimeOnly("org.postgresql:r2dbc-postgresql")
