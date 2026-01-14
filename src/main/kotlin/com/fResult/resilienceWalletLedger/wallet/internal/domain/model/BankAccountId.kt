@@ -1,13 +1,13 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
+import com.fResult.resilienceWalletLedger.common.IdGenerator
 import java.util.UUID
 
-// TODO: Refactor to use UUID Creator library for v7
 @JvmInline
 value class BankAccountId(
   val value: UUID,
 ) {
   companion object {
-    fun generate(): BankAccountId = BankAccountId(UUID.randomUUID())
+    fun generate(): BankAccountId = BankAccountId(IdGenerator.generate())
   }
 }
