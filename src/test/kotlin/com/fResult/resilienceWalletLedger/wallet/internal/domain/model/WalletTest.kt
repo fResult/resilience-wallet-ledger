@@ -5,15 +5,17 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 
 class WalletTest {
-  private val walletId = WalletId.generate()
-  private val ownerId = OwnerId.generate()
-  private val linkedBankAccountId = BankAccountId.generate()
+  private val walletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+  private val ownerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+  private val linkedBankAccountId =
+    BankAccountId(UUID.fromString("00000000-0000-0000-0000-000000000003"))
 
   @Test
   fun `deposit with positive amount should succeed and increase balance`() {

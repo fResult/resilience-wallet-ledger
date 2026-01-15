@@ -36,9 +36,10 @@ class WalletPersistenceAdapterTest {
   private val repository: SpringDataWalletRepository = mock(SpringDataWalletRepository::class.java)
   private val adapter = WalletPersistenceAdapter(repository)
 
-  private val mockWalletId = WalletId.generate()
-  private val mockOwnerId = OwnerId.generate()
-  private val mockBankAccountId = BankAccountId.generate()
+  private val mockWalletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+  private val mockOwnerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+  private val mockBankAccountId =
+    BankAccountId(UUID.fromString("00000000-0000-0000-0000-000000000003"))
 
   @Test
   fun `findById should return Right(Wallet) when entity exists`() {

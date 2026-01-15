@@ -64,11 +64,12 @@ data class Wallet(
 
   companion object {
     fun create(
+      walletId: WalletId,
       ownerId: OwnerId,
       name: String,
       currency: Currency,
     ) = Wallet(
-      id = WalletId.generate(),
+      id = walletId,
       name = name,
       balance = Money(BigDecimal.ZERO, currency),
       ownerId = ownerId,

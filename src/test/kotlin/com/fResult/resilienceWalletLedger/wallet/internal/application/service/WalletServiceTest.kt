@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.application.service
 
+import com.fResult.resilienceWalletLedger.common.IdGenerator
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
@@ -8,8 +9,10 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import io.vavr.control.Either
 import java.math.BigDecimal
+import java.util.UUID
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -27,16 +30,19 @@ class WalletServiceTest {
   @Mock
   private lateinit var walletRepository: WalletRepository
 
-  private lateinit var walletService: WalletService
+  @Mock
+  private lateinit var idGenerator: IdGenerator
+
+  private lateinit var walletApplicationService: WalletApplicationService
 
   @BeforeEach
   fun setUp() {
-    walletService = WalletService(walletRepository)
+    walletApplicationService = WalletApplicationService(walletRepository, idGenerator)
   }
 
   @Nested
   inner class CreateWallet {
-    private val expectedOwnerId = OwnerId.generate()
+    private val expectedOwnerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
     private val expectedWalletName = "My Wallet"
     private val expectedBalance = Money(BigDecimal.ZERO, Currency.JPY)
     private val expectedVersion = 1L
@@ -48,7 +54,7 @@ class WalletServiceTest {
 
       // When
       val actualResult =
-        walletService.createWallet(
+        walletApplicationService.createWallet(
           expectedWalletName,
           expectedOwnerId,
           expectedBalance.currency,
@@ -75,7 +81,7 @@ class WalletServiceTest {
 
       // When
       val actualResult =
-        walletService.createWallet(
+        walletApplicationService.createWallet(
           expectedWalletName,
           expectedOwnerId,
           expectedBalance.currency,
@@ -96,7 +102,8 @@ class WalletServiceTest {
     @Test
     fun `should return Right(Wallet) when deposit is successful`() {
       // Given
-      val ownerId = OwnerId.generate()
+      val walletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+      val ownerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
       val initialBalance = thb(1500)
       val initialVersion = 3L
       val amountToDeposit = thb(500)
@@ -105,6 +112,7 @@ class WalletServiceTest {
       val existingWallet =
         Wallet
           .create(
+            walletId,
             ownerId,
             "My Wallet",
             initialBalance.currency,
@@ -121,7 +129,7 @@ class WalletServiceTest {
       }
 
       // When
-      val actualResult = walletService.deposit(existingWallet.id, amountToDeposit)
+      val actualResult = walletApplicationService.deposit(existingWallet.id, amountToDeposit)
 
       // Then
       StepVerifier
