@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
 @ExtendWith(MockitoExtension::class)
-class WalletServiceTest {
+class WalletApplicationServiceTest {
   @Mock
   private lateinit var walletRepository: WalletRepository
 
