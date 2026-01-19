@@ -1,34 +1,30 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity
 
-import java.math.BigDecimal
+import io.r2dbc.postgresql.codec.Json
 import java.time.Instant
 import java.util.UUID
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.Id
-import org.springframework.data.annotation.LastModifiedDate
-import org.springframework.data.annotation.Version
+import org.springframework.data.annotation.Transient
 import org.springframework.data.domain.Persistable
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 
-@Table("wallets")
-data class WalletEntity(
+@Table("outbox_wallet_events")
+data class WalletOutboxEntity(
   @Id
   @Column("id")
   private val _id: UUID,
-  val name: String,
-  val balanceAmount: BigDecimal,
-  val balanceCurrency: String,
-  val linkedBankAccountId: UUID?,
-  val ownerId: UUID,
-  val status: String,
-  @Version val version: Long? = null,
+  val walletId: UUID, // Domain ID (Changed from aggregate_id)
+  val version: Long, // Added for consistency check
+  val eventType: String, // event.javaClass.simpleName
+  val payload: Json, // JSON String
+  val occurredOn: Instant,
   @CreatedDate
-  var createdAt: Instant? = null,
-  @LastModifiedDate
-  var updatedAt: Instant? = null,
+  val createdAt: Instant? = null,
 ) : Persistable<UUID> {
   override fun getId(): UUID = _id
 
-  override fun isNew(): Boolean = version == null
+  @Transient
+  override fun isNew(): Boolean = createdAt == null
 }
