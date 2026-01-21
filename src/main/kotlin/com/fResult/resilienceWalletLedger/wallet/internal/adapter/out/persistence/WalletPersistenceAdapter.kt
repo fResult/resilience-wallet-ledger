@@ -5,8 +5,11 @@ import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationExc
 import com.fResult.resilienceWalletLedger.common.extension.commandToEither
 import com.fResult.resilienceWalletLedger.common.extension.queryToEither
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
+import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletOutboxEntity
+import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataOutboxRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletAlreadyExistsException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletConcurrencyException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
@@ -18,6 +21,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletStatus
+import io.r2dbc.postgresql.codec.Json
 import io.vavr.control.Either
 import java.time.Instant
 import java.util.UUID
@@ -25,26 +29,38 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.OptimisticLockingFailureException
 import reactor.core.publisher.Mono
+import tools.jackson.databind.ObjectMapper
 
 @PersistenceAdapter
 class WalletPersistenceAdapter(
-  private val repository: SpringDataWalletRepository,
+  private val walletRepository: SpringDataWalletRepository,
+  private val outboxRepository: SpringDataOutboxRepository,
+  private val mapper: ObjectMapper,
 ) : WalletRepository {
   override fun findById(id: WalletId): Mono<Either<WalletException, Wallet>> =
-    repository
+    walletRepository
       .findById(id.value)
       .map(::toDomain)
       .queryToEither(translatePersistenceError(id.value)) {
         WalletNotFoundException("Wallet with ID ${id.value} not found")
       }
 
-  override fun save(wallet: Wallet): Mono<Either<WalletException, Wallet>> =
-    wallet
+  override fun save(
+    data: Pair<Wallet, List<WalletEvent>>,
+  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> {
+    val (wallet, events) = data
+
+    return wallet
       .let(::toEntity)
-      .let(repository::save)
-      .switchIfEmpty(Mono.error(WalletException("Save returned empty")))
-      .map(::toDomain)
-      .commandToEither(translatePersistenceError(wallet.id.value))
+      .let(walletRepository::save)
+      .flatMap { savedWallet ->
+        val outboxEntities = events.map(outboxEntryFor(savedWallet))
+        outboxRepository
+          .saveAll(outboxEntities)
+          .collectList()
+          .map { toDomain(savedWallet) to events }
+      }.commandToEither(translatePersistenceError(wallet.id.value))
+  }
 
   private fun toDomain(entity: WalletEntity): Wallet =
     Wallet(
@@ -82,6 +98,18 @@ class WalletPersistenceAdapter(
       createdAt = domain.createdAt,
       updatedAt = Instant.now(),
     )
+
+  private fun outboxEntryFor(walletEntity: WalletEntity): (WalletEvent) -> WalletOutboxEntity =
+    { event ->
+      WalletOutboxEntity(
+        _id = event.eventId,
+        walletId = walletEntity.id,
+        version = walletEntity.version ?: 0L,
+        eventType = event.javaClass.simpleName,
+        payload = Json.of(mapper.writeValueAsString(event)),
+        occurredOn = event.occurredOn,
+      )
+    }
 
   private fun translatePersistenceError(id: UUID): (Throwable) -> WalletException =
     { ex ->
