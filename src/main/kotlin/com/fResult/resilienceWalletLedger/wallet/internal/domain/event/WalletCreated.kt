@@ -8,7 +8,7 @@ import java.time.Instant
 import java.util.UUID
 
 data class WalletCreated(
-  val eventId: UUID,
+  override val eventId: UUID,
   val walletId: WalletId,
   val ownerId: OwnerId,
   val linkedBankAccountId: BankAccountId?,

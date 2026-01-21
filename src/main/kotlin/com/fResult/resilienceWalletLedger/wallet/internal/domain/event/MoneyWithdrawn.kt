@@ -5,7 +5,7 @@ import java.time.Instant
 import java.util.UUID
 
 data class MoneyWithdrawn(
-  val eventId: UUID,
+  override val eventId: UUID,
   val amount: Money,
   val currentBalance: Money,
   val refTransactionId: String,
