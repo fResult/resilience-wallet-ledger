@@ -66,7 +66,7 @@ class WalletPersistenceAdapter(
     Wallet(
       id =
         WalletId(
-          entity.id
+          entity.id as UUID?
             ?: throw InvariantViolationException(
               "CRITICAL: Found WalletEntity with null ID inside DB! This is a bug.",
             ),
