@@ -11,6 +11,6 @@ interface WalletRepository {
   fun findById(id: WalletId): Mono<Either<WalletException, Wallet>>
 
   fun save(
-    wallet: Pair<Wallet, List<WalletEvent>>,
+    data: Pair<Wallet, List<WalletEvent>>,
   ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>>
 }

@@ -53,14 +53,20 @@ class WalletPersistenceAdapter(
     return wallet
       .let(::toEntity)
       .let(walletRepository::save)
-      .flatMap { savedWallet ->
-        val outboxEntities = events.map(outboxEntryFor(savedWallet))
-        outboxRepository
-          .saveAll(outboxEntities)
-          .collectList()
-          .map { toDomain(savedWallet) to events }
-      }.commandToEither(translatePersistenceError(wallet.id.value))
+      .zipWhen(persistEvents(events))
+      .map { tuple -> toDomain(tuple.t1) to events }
+      .commandToEither(translatePersistenceError(wallet.id.value))
   }
+
+  private fun persistEvents(
+    events: List<WalletEvent>,
+  ): (WalletEntity) -> Mono<List<WalletOutboxEntity>> =
+    { savedWallet ->
+      events
+        .map(outboxEntryFor(savedWallet))
+        .let(outboxRepository::saveAll)
+        .collectList()
+    }
 
   private fun toDomain(entity: WalletEntity): Wallet =
     Wallet(
