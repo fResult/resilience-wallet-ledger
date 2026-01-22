@@ -1,6 +1,8 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
+import com.fResult.resilienceWalletLedger.common.event.DomainEvent
 import com.fResult.resilienceWalletLedger.common.extension.toLeft
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import io.vavr.control.Either
@@ -17,7 +19,7 @@ data class Wallet(
   val createdAt: Instant,
   val version: Long = 0,
 ) {
-  fun deposit(amount: Money): Either<WalletException, Wallet> {
+  fun deposit(amount: Money): Either<WalletException, Pair<Wallet, List<DomainEvent>>> {
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
@@ -31,8 +33,16 @@ data class Wallet(
     }
 
     val balanceToDeposit = balance + amount
+    val event =
+      MoneyDeposited(
+        id.value,
+        amount,
+        balanceToDeposit,
+        "",
+        Instant.now(),
+      )
 
-    return Either.right(this.copy(balance = balanceToDeposit))
+    return Either.right(this.copy(balance = balanceToDeposit) to listOf(event))
   }
 
   fun withdraw(amount: Money): Either<WalletException, Wallet> {
