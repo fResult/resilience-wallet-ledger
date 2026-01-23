@@ -56,7 +56,7 @@ class WalletPersistenceAdapter(
       .let(::toEntity)
       .let(walletRepository::save)
       .zipWhen(persistEvents(events), ::Pair)
-      .map { pair -> pair.bimap(::toDomain) { events } }
+      .bimapPair(::toDomain) { events }
       .commandToEither(translatePersistenceError(wallet.id.value))
   }
 
