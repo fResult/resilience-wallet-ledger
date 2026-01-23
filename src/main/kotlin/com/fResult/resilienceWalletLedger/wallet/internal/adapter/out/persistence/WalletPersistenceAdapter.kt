@@ -2,6 +2,8 @@ package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persisten
 
 import com.fResult.resilienceWalletLedger.common.annotation.PersistenceAdapter
 import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
+import com.fResult.resilienceWalletLedger.common.extension.bimap
+import com.fResult.resilienceWalletLedger.common.extension.bimapPair
 import com.fResult.resilienceWalletLedger.common.extension.commandToEither
 import com.fResult.resilienceWalletLedger.common.extension.queryToEither
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
@@ -53,8 +55,8 @@ class WalletPersistenceAdapter(
     return wallet
       .let(::toEntity)
       .let(walletRepository::save)
-      .zipWhen(persistEvents(events))
-      .map { tuple -> toDomain(tuple.t1) to events }
+      .zipWhen(persistEvents(events), ::Pair)
+      .map { pair -> pair.bimap(::toDomain) { events } }
       .commandToEither(translatePersistenceError(wallet.id.value))
   }
 
