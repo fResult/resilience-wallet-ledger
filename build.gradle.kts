@@ -31,9 +31,9 @@ dependencies {
   // Upgrade to Vavr 1.0.0 if available
   implementation("io.vavr:vavr:$vavrVersion")
   implementation("com.fasterxml.uuid:java-uuid-generator:$uuidGeneratorVersion")
+  implementation("org.postgresql:r2dbc-postgresql")
 
   runtimeOnly("org.postgresql:postgresql")
-  runtimeOnly("org.postgresql:r2dbc-postgresql")
 
 //  testImplementation(platform("org.testcontainers:testcontainers-bom:$testcontainersVersion"))
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
@@ -81,31 +81,28 @@ tasks.register("installGitHooks") {
   doLast {
     val preCommitFile = file(".git/hooks/pre-commit")
     val script =
-      """
+      $$"""
       #!/bin/sh
+      
+      STAGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E "\.kt\$|\.kts\$")
+      echo "Staged Files:\n $STAGED_FILES"
 
-      # 1. Identify staged Kotlin files
-      STAGED_FILES=${'$'}(git diff --name-only --cached --diff-filter=ACMR | grep -E "\.kt${'$'}|\.kts${'$'}")
-
-      if [ -z "${'$'}STAGED_FILES" ]; then
-          exit 0
+      if [ -z "$STAGED_FILES" ]; then
+        exit 0
       fi
 
-      echo "🧹 Running Spotless Apply on staged files..."
+      echo "🔍 Running Spotless Check..."
 
-      ./gradlew spotlessApply
+      ./gradlew spotlessCheck
+      RESULT=$?
 
-      RESULT=${'$'}?
-
-      if [ ${'$'}RESULT -ne 0 ]; then
-          echo "❌ Spotless check failed!"
-          exit 1
+      if [ $RESULT -ne 0 ]; then
+        echo "❌ Spotless check failed!"
+        echo "👉 Please run ./gradlew spotlessApply and re-stage manually"
+        exit 1
       fi
 
-      # 2. Re-stage formatted files
-      echo "${'$'}STAGED_FILES" | xargs git add
-
-      echo "✅ Code formatted successfully."
+      echo "✅ Spotless check passed"
       exit 0
       """.trimIndent()
 
