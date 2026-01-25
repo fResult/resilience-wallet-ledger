@@ -1,13 +1,16 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
-import com.fResult.resilienceWalletLedger.common.event.DomainEvent
 import com.fResult.resilienceWalletLedger.common.extension.toLeft
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyWithdrawn
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import io.vavr.control.Either
 import java.math.BigDecimal
 import java.time.Instant
+import java.util.UUID
 
 data class Wallet(
   val id: WalletId,
@@ -19,7 +22,41 @@ data class Wallet(
   val createdAt: Instant,
   val version: Long = 0,
 ) {
-  fun deposit(amount: Money): Either<WalletException, Pair<Wallet, List<DomainEvent>>> {
+  companion object {
+    fun create(
+      walletId: WalletId,
+      ownerId: OwnerId,
+      name: String,
+      currency: Currency,
+    ): Pair<Wallet, List<WalletEvent>> =
+      Wallet(
+        id = walletId,
+        name = name,
+        balance = Money(BigDecimal.ZERO, currency),
+        ownerId = ownerId,
+        status = WalletStatus.ACTIVE,
+        createdAt = Instant.now(),
+        version = 0L,
+        linkedBankAccountId = null,
+      ).let(
+        pairWithEvents(
+          WalletCreated(
+            eventId = UUID.fromString("dkfjaidsfkji"),
+            walletId = walletId,
+            ownerId = ownerId,
+            linkedBankAccountId = null,
+            name = name,
+            initialBalance = Money(BigDecimal.ZERO, currency),
+            occurredOn = Instant.now(),
+          ),
+        ),
+      )
+
+    private fun pairWithEvents(event: WalletEvent): (Wallet) -> Pair<Wallet, List<WalletEvent>> =
+      { wallet -> wallet to listOf(event) }
+  }
+
+  fun deposit(amount: Money): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
@@ -45,7 +82,7 @@ data class Wallet(
     return Either.right(this.copy(balance = balanceToDeposit) to listOf(event))
   }
 
-  fun withdraw(amount: Money): Either<WalletException, Wallet> {
+  fun withdraw(amount: Money): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
@@ -64,29 +101,19 @@ data class Wallet(
     }
 
     val balanceToWithdraw = balance - amount
+    val event =
+      MoneyWithdrawn(
+        id.value,
+        amount,
+        balanceToWithdraw,
+        "",
+        Instant.now(),
+      )
 
-    return Either.right(this.copy(balance = balanceToWithdraw))
+    return Either.right(this.copy(balance = balanceToWithdraw) to listOf(event))
   }
 
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
 
   private fun hasInsufficientFunds(money: Money): Boolean = balance.amount < money.amount
-
-  companion object {
-    fun create(
-      walletId: WalletId,
-      ownerId: OwnerId,
-      name: String,
-      currency: Currency,
-    ) = Wallet(
-      id = walletId,
-      name = name,
-      balance = Money(BigDecimal.ZERO, currency),
-      ownerId = ownerId,
-      status = WalletStatus.ACTIVE,
-      createdAt = Instant.now(),
-      version = 0L,
-      linkedBankAccountId = null,
-    )
-  }
 }

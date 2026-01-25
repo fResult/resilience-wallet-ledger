@@ -2,7 +2,6 @@ package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persisten
 
 import com.fResult.resilienceWalletLedger.common.annotation.PersistenceAdapter
 import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
-import com.fResult.resilienceWalletLedger.common.extension.bimap
 import com.fResult.resilienceWalletLedger.common.extension.bimapPair
 import com.fResult.resilienceWalletLedger.common.extension.commandToEither
 import com.fResult.resilienceWalletLedger.common.extension.queryToEither
@@ -55,12 +54,12 @@ class WalletPersistenceAdapter(
     return wallet
       .let(::toEntity)
       .let(walletRepository::save)
-      .zipWhen(persistEvents(events), ::Pair)
+      .zipWhen(recordEvents(events), ::Pair)
       .bimapPair(::toDomain) { events }
       .commandToEither(translatePersistenceError(wallet.id.value))
   }
 
-  private fun persistEvents(
+  private fun recordEvents(
     events: List<WalletEvent>,
   ): (WalletEntity) -> Mono<List<WalletOutboxEntity>> =
     { savedWallet ->
