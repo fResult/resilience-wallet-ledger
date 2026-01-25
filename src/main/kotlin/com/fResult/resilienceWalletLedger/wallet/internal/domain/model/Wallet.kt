@@ -28,6 +28,8 @@ data class Wallet(
       ownerId: OwnerId,
       name: String,
       currency: Currency,
+      eventId: UUID,
+      occurredOn: Instant,
     ): Pair<Wallet, List<WalletEvent>> =
       Wallet(
         id = walletId,
@@ -41,13 +43,13 @@ data class Wallet(
       ).let(
         pairWithEvents(
           WalletCreated(
-            eventId = UUID.fromString("dkfjaidsfkji"),
+            eventId = eventId,
             walletId = walletId,
             ownerId = ownerId,
             linkedBankAccountId = null,
             name = name,
             initialBalance = Money(BigDecimal.ZERO, currency),
-            occurredOn = Instant.now(),
+            occurredOn = occurredOn,
           ),
         ),
       )
@@ -56,7 +58,12 @@ data class Wallet(
       { wallet -> wallet to listOf(event) }
   }
 
-  fun deposit(amount: Money): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
+  fun deposit(
+    amount: Money,
+    eventId: UUID,
+    refTransactionId: String,
+    occurredOn: Instant,
+  ): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
@@ -72,17 +79,22 @@ data class Wallet(
     val balanceToDeposit = balance + amount
     val event =
       MoneyDeposited(
-        id.value,
-        amount,
-        balanceToDeposit,
-        "",
-        Instant.now(),
+        eventId = eventId,
+        currentBalance = amount,
+        amount = balanceToDeposit,
+        refTransactionId = refTransactionId,
+        occurredOn = occurredOn,
       )
 
     return Either.right(this.copy(balance = balanceToDeposit) to listOf(event))
   }
 
-  fun withdraw(amount: Money): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
+  fun withdraw(
+    amount: Money,
+    eventId: UUID,
+    refTransactionId: String,
+    occurredOn: Instant,
+  ): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
@@ -103,11 +115,11 @@ data class Wallet(
     val balanceToWithdraw = balance - amount
     val event =
       MoneyWithdrawn(
-        id.value,
-        amount,
-        balanceToWithdraw,
-        "",
-        Instant.now(),
+        eventId = eventId,
+        currentBalance = amount,
+        amount = balanceToWithdraw,
+        refTransactionId = refTransactionId,
+        occurredOn = occurredOn,
       )
 
     return Either.right(this.copy(balance = balanceToWithdraw) to listOf(event))

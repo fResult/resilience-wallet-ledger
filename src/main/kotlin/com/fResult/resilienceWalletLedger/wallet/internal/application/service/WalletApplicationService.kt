@@ -14,6 +14,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import io.vavr.control.Either
+import java.time.Instant
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
@@ -29,8 +30,16 @@ class WalletApplicationService(
     currency: Currency,
   ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> =
     WalletId(idGenerator.generate())
-      .let { Wallet.create(it, ownerId, walletName, currency) }
-      .let(walletRepository::save)
+      .let {
+        Wallet.create(
+          it,
+          ownerId,
+          walletName,
+          currency,
+          idGenerator.generate(),
+          Instant.now(),
+        )
+      }.let(walletRepository::save)
       .toEitherRight { (wallet, events) ->
         /* Design note:
          * Publish domain events to notify other systems that a wallet was created
@@ -62,19 +71,34 @@ class WalletApplicationService(
   private fun withdrawing(
     amount: Money,
   ): (Wallet) -> Either<WalletException, Pair<Wallet, List<WalletEvent>>> =
-    { wallet -> wallet.withdraw(amount) }
+    { wallet ->
+      // FIXME: Inject eventId, refTransactionId, occurredOn from method parameters
+      wallet.withdraw(
+        amount,
+        idGenerator.generate(),
+        idGenerator.generate().toString(),
+        Instant.now(),
+      )
+    }
 
   private fun depositing(
     amount: Money,
   ): (Wallet) -> Either<WalletException, Pair<Wallet, List<WalletEvent>>> =
     {
-      it.deposit(amount).map { (wallet, events) ->
+      it
+        // FIXME: Inject eventId, refTransactionId, occurredOn from method parameters
+        .deposit(
+          amount,
+          idGenerator.generate(),
+          idGenerator.generate().toString(),
+          Instant.now(),
+        ).map { (wallet, events) ->
         /* Design Note:
          * Publish domain events to notify other systems that a wallet was created
          * (e.g. reporting, notifications, compliance, downstream processes)
          */
-        Pair(wallet, events)
-      }
+          Pair(wallet, events)
+        }
     }
 
   private fun persist(
