@@ -14,10 +14,10 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import io.vavr.control.Either
-import java.time.Instant
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
+import java.time.Instant
 
 @Service
 class WalletApplicationService(
@@ -52,37 +52,41 @@ class WalletApplicationService(
   override fun deposit(
     walletId: WalletId,
     amount: Money,
+    refTransactionId: String,
   ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> =
     walletRepository
       .findById(walletId)
-      .map { it.flatMap(depositing(amount)) }
+      .map { it.flatMap(depositing(amount, refTransactionId)) }
       .flatMap(::persist)
 
   @Transactional
   override fun withdraw(
     walletId: WalletId,
     amount: Money,
+    refTransactionId: String,
   ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> =
     walletRepository
       .findById(walletId)
-      .map { it.flatMap(withdrawing(amount)) }
+      .map { it.flatMap(withdrawing(amount, refTransactionId)) }
       .flatMap(::persist)
 
   private fun withdrawing(
     amount: Money,
+    refTransactionId: String,
   ): (Wallet) -> Either<WalletException, Pair<Wallet, List<WalletEvent>>> =
     { wallet ->
       // FIXME: Inject eventId, refTransactionId, occurredOn from method parameters
       wallet.withdraw(
         amount,
         idGenerator.generate(),
-        idGenerator.generate().toString(),
+        refTransactionId,
         Instant.now(),
       )
     }
 
   private fun depositing(
     amount: Money,
+    idempotencyKey: String,
   ): (Wallet) -> Either<WalletException, Pair<Wallet, List<WalletEvent>>> =
     {
       it
@@ -90,13 +94,13 @@ class WalletApplicationService(
         .deposit(
           amount,
           idGenerator.generate(),
-          idGenerator.generate().toString(),
+          idempotencyKey,
           Instant.now(),
         ).map { (wallet, events) ->
-        /* Design Note:
-         * Publish domain events to notify other systems that a wallet was created
-         * (e.g. reporting, notifications, compliance, downstream processes)
-         */
+          /* Design Note:
+           * Publish domain events to notify other systems that a wallet was created
+           * (e.g. reporting, notifications, compliance, downstream processes)
+           */
           Pair(wallet, events)
         }
     }
@@ -112,7 +116,6 @@ class WalletApplicationService(
        */
       { Mono.just(it.toLeft()) },
       { (wallet, events) ->
-        // TODO: [Outbox] Save `DepositCompletedEvent` to Outbox Repository
         walletRepository
           .save(wallet to events)
           .flatMapRight { (wallet, events) -> Mono.just(Either.right(wallet to events)) }

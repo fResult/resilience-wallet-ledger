@@ -20,10 +20,12 @@ interface WalletService {
   fun deposit(
     walletId: WalletId,
     amount: Money,
+    refTransactionId: String,
   ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>>
 
   fun withdraw(
     walletId: WalletId,
     amount: Money,
+    refTransactionId: String,
   ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>>
 }
