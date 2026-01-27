@@ -37,7 +37,7 @@ data class Wallet(
         balance = Money(BigDecimal.ZERO, currency),
         ownerId = ownerId,
         status = WalletStatus.ACTIVE,
-        createdAt = Instant.now(),
+        createdAt = occurredOn,
         version = 0L,
         linkedBankAccountId = null,
       ).let(

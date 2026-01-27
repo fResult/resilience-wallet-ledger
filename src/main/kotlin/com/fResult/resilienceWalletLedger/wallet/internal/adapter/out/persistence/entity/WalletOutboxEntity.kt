@@ -20,7 +20,7 @@ data class WalletOutboxEntity(
   val eventType: String, // event.javaClass.simpleName
   val payload: Json, // JSON String
   val occurredOn: Instant,
-  @CreatedDate
+  @field:CreatedDate
   val createdAt: Instant? = null,
 ) : Persistable<UUID> {
   override fun getId(): UUID = _id

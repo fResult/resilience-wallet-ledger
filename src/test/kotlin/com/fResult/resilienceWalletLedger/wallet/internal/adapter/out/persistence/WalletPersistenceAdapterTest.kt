@@ -4,7 +4,9 @@ import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationExc
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
+import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataOutboxRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletAlreadyExistsException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletConcurrencyException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
@@ -31,10 +33,16 @@ import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.OptimisticLockingFailureException
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import tools.jackson.databind.ObjectMapper
 
 class WalletPersistenceAdapterTest {
-  private val repository: SpringDataWalletRepository = mock(SpringDataWalletRepository::class.java)
-  private val adapter = WalletPersistenceAdapter(repository)
+  private val walletRepository: SpringDataWalletRepository =
+    mock(SpringDataWalletRepository::class.java)
+  private val outboxRepository: SpringDataOutboxRepository =
+    mock(SpringDataOutboxRepository::class.java)
+  private val mapper = mock(ObjectMapper::class.java)
+
+  private val adapter = WalletPersistenceAdapter(walletRepository, outboxRepository, mapper)
 
   private val mockWalletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
   private val mockOwnerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
@@ -45,7 +53,7 @@ class WalletPersistenceAdapterTest {
   fun `findById should return Right(Wallet) when entity exists`() {
     // Given
     val expectedResult = createWalletEntity(mockWalletId.value)
-    given(repository.findById(mockWalletId.value)).willReturn(Mono.just(expectedResult))
+    given(walletRepository.findById(mockWalletId.value)).willReturn(Mono.just(expectedResult))
 
     // When
     val actualResult = adapter.findById(mockWalletId)
@@ -64,7 +72,7 @@ class WalletPersistenceAdapterTest {
   @Test
   fun `findById should return Left(WalletNotFoundException) when entity does not exist`() {
     // Given
-    given(repository.findById(mockWalletId.value)).willReturn(Mono.empty())
+    given(walletRepository.findById(mockWalletId.value)).willReturn(Mono.empty())
 
     // When
     val actualResult = adapter.findById(mockWalletId)
@@ -81,8 +89,9 @@ class WalletPersistenceAdapterTest {
   @Test
   fun `findById should fail with InvariantViolationException on corrupted data`() {
     // Given
-    val corruptedEntity = createWalletEntity(mockWalletId.value).copy(_id = null)
-    given(repository.findById(mockWalletId.value)).willReturn(Mono.just(corruptedEntity))
+    @Suppress("CAST_NEVER_SUCCEEDS")
+    val corruptedEntity = createWalletEntity(mockWalletId.value).copy(_id = null as UUID)
+    given(walletRepository.findById(mockWalletId.value)).willReturn(Mono.just(corruptedEntity))
 
     // When
     val actualResult = adapter.findById(mockWalletId)
@@ -107,17 +116,18 @@ class WalletPersistenceAdapterTest {
     // Given
     val wallet = createWallet()
     val entity = createWalletEntity(wallet.id.value)
+    val events = emptyList<WalletEvent>()
 
-    given(repository.save(any<WalletEntity>())).willReturn(Mono.just(entity))
+    given(walletRepository.save(any<WalletEntity>())).willReturn(Mono.just(entity))
 
     // When
-    val actualResult = adapter.save(wallet)
+    val response = adapter.save(wallet to events)
 
     // Then
     StepVerifier
-      .create(actualResult)
+      .create(response)
       .assertNext { result ->
-        val savedWallet = result.expectRight("Should save wallet")
+        val (savedWallet, savedEvents) = result.expectRight("Should save wallet")
         assertEquals(wallet.id, savedWallet.id)
       }.verifyComplete()
   }
@@ -126,7 +136,7 @@ class WalletPersistenceAdapterTest {
   fun `findById should return Left when data mapping fails (Invalid Enum)`() {
     // Given
     val invalidEnumEntity = createWalletEntity(mockWalletId.value).copy(balanceCurrency = "BITCOIN")
-    given(repository.findById(mockWalletId.value)).willReturn(Mono.just(invalidEnumEntity))
+    given(walletRepository.findById(mockWalletId.value)).willReturn(Mono.just(invalidEnumEntity))
 
     // When
     val actualResult = adapter.findById(mockWalletId)
@@ -146,12 +156,13 @@ class WalletPersistenceAdapterTest {
   fun `save should return Left(WalletException) when repository unexpected error`() {
     // Given
     val wallet = createWallet()
+    val events = emptyList<WalletEvent>()
     given(
-      repository.save(any<WalletEntity>()),
+      walletRepository.save(any<WalletEntity>()),
     ).willReturn(Mono.error(RuntimeException("DB Error")))
 
     // When
-    val actualResult = adapter.save(wallet)
+    val actualResult = adapter.save(wallet to events)
 
     // Then
     StepVerifier
@@ -167,13 +178,14 @@ class WalletPersistenceAdapterTest {
   fun `save should return Left(WalletAlreadyExistsException) when repository fails`() {
     // Given
     val wallet = createWallet()
+    val events = emptyList<WalletEvent>()
     val errorMessage = "Wallet with ID [${wallet.id.value}] already existed"
     given(
-      repository.save(any<WalletEntity>()),
+      walletRepository.save(any<WalletEntity>()),
     ).willReturn(Mono.error(DuplicateKeyException(errorMessage)))
 
     // When
-    val actualResult = adapter.save(wallet)
+    val actualResult = adapter.save(wallet to events)
 
     // Then
     StepVerifier
@@ -190,12 +202,13 @@ class WalletPersistenceAdapterTest {
   fun `save should return Left(WalletConcurrencyException) on optimistic lock failure`() {
     // Given
     val wallet = createWallet()
+    val events = emptyList<WalletEvent>()
     given(
-      repository.save(any<WalletEntity>()),
+      walletRepository.save(any<WalletEntity>()),
     ).willReturn(Mono.error(OptimisticLockingFailureException("Version mismatch")))
 
     // When
-    val actualResult = adapter.save(wallet)
+    val actualResult = adapter.save(wallet to events)
 
     // Then
     StepVerifier
@@ -217,12 +230,13 @@ class WalletPersistenceAdapterTest {
     val dbErrorMessage = "DB Error"
     val expectedErrorMessage = "Data Integrity Violation: $dbErrorMessage"
     val wallet = createWallet()
+    val events = emptyList<WalletEvent>()
     given(
-      repository.save(any<WalletEntity>()),
+      walletRepository.save(any<WalletEntity>()),
     ).willReturn(Mono.error(DataIntegrityViolationException(dbErrorMessage)))
 
     // When
-    val actualResult = adapter.save(wallet)
+    val actualResult = adapter.save(wallet to events)
 
     // Then
     StepVerifier
@@ -239,10 +253,11 @@ class WalletPersistenceAdapterTest {
   fun `save should handle empty Mono from repository (Safety Check)`() {
     // Given
     val wallet = createWallet()
-    given(repository.save(any<WalletEntity>())).willReturn(Mono.empty())
+    val events = emptyList<WalletEvent>()
+    given(walletRepository.save(any<WalletEntity>())).willReturn(Mono.empty())
 
     // When
-    val actualResult = adapter.save(wallet)
+    val actualResult = adapter.save(wallet to events)
 
     // Then
     StepVerifier

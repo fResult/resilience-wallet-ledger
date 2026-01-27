@@ -16,6 +16,8 @@ class WalletTest {
   private val ownerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
   private val linkedBankAccountId =
     BankAccountId(UUID.fromString("00000000-0000-0000-0000-000000000003"))
+  private val fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000001")
+  private val fixedIdempotencyKey = UUID.fromString("99999999-9999-9999-9999-9999999999999")
 
   @Test
   fun `deposit with positive amount should succeed and increase balance`() {
@@ -25,7 +27,13 @@ class WalletTest {
     val depositAmount = usd(100)
 
     // When
-    val result = initialWallet.deposit(depositAmount)
+    val result =
+      initialWallet.deposit(
+        depositAmount,
+        fixedUuid,
+        fixedIdempotencyKey.toString(),
+        Instant.now(),
+      )
 
     // Then
     val actualResult = result.expectRight("Deposit should succeed")
@@ -41,7 +49,13 @@ class WalletTest {
     val depositAmount = thb(1000)
 
     // When
-    val result = initialWallet.deposit(depositAmount)
+    val result =
+      initialWallet.deposit(
+        depositAmount,
+        fixedUuid,
+        fixedIdempotencyKey.toString(),
+        Instant.now(),
+      )
 
     // Then
     val actualError = result.expectLeft("Deposit should fail")
@@ -58,7 +72,13 @@ class WalletTest {
     val depositAmount = usd(invalidAmount)
 
     // When
-    val result = initialWallet.deposit(depositAmount)
+    val result =
+      initialWallet.deposit(
+        depositAmount,
+        fixedUuid,
+        fixedIdempotencyKey.toString(),
+        Instant.now(),
+      )
 
     // Then
     val actualError = result.expectLeft("Deposit should fail")
@@ -87,7 +107,13 @@ class WalletTest {
     val withdrawalAmount = usd(100)
 
     // When
-    val result = initialWallet.withdraw(withdrawalAmount)
+    val result =
+      initialWallet.withdraw(
+        withdrawalAmount,
+        fixedUuid,
+        fixedIdempotencyKey.toString(),
+        Instant.now(),
+      )
 
     // Then
     val actualResult = result.expectRight("Withdrawal should succeed")
@@ -104,7 +130,13 @@ class WalletTest {
     val depositAmount = usd(invalidAmount)
 
     // When
-    val result = initialWallet.withdraw(depositAmount)
+    val result =
+      initialWallet.withdraw(
+        depositAmount,
+        fixedUuid,
+        fixedIdempotencyKey.toString(),
+        Instant.now(),
+      )
 
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")
@@ -134,7 +166,13 @@ class WalletTest {
     val withdrawalAmount = thb(1000)
 
     // When
-    val result = initialWallet.withdraw(withdrawalAmount)
+    val result =
+      initialWallet.withdraw(
+        withdrawalAmount,
+        fixedUuid,
+        fixedIdempotencyKey.toString(),
+        Instant.now(),
+      )
 
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")
@@ -152,7 +190,13 @@ class WalletTest {
     val withdrawalAmount = usd(withdrawAmountVal)
 
     // When
-    val result = initialWallet.withdraw(withdrawalAmount)
+    val result =
+      initialWallet.withdraw(
+        withdrawalAmount,
+        fixedUuid,
+        fixedIdempotencyKey.toString(),
+        Instant.now(),
+      )
 
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")

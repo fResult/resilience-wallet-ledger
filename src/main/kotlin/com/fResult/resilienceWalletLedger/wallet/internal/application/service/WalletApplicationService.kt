@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.application.service
 
+import com.fResult.resilienceWalletLedger.common.Clock
 import com.fResult.resilienceWalletLedger.common.IdGenerator
 import com.fResult.resilienceWalletLedger.common.extension.flatMapRight
 import com.fResult.resilienceWalletLedger.common.extension.toEitherRight
@@ -17,12 +18,12 @@ import io.vavr.control.Either
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
-import java.time.Instant
 
 @Service
 class WalletApplicationService(
   val walletRepository: WalletRepository,
   val idGenerator: IdGenerator,
+  val clock: Clock,
 ) : WalletService {
   override fun createWallet(
     walletName: String,
@@ -37,7 +38,7 @@ class WalletApplicationService(
           walletName,
           currency,
           idGenerator.generate(),
-          Instant.now(),
+          clock.now(),
         )
       }.let(walletRepository::save)
       .toEitherRight { (wallet, events) ->
@@ -80,7 +81,7 @@ class WalletApplicationService(
         amount,
         idGenerator.generate(),
         refTransactionId,
-        Instant.now(),
+        clock.now(),
       )
     }
 
@@ -95,7 +96,7 @@ class WalletApplicationService(
           amount,
           idGenerator.generate(),
           idempotencyKey,
-          Instant.now(),
+          clock.now(),
         ).map { (wallet, events) ->
           /* Design Note:
            * Publish domain events to notify other systems that a wallet was created
