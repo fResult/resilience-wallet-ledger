@@ -1,6 +1,5 @@
 package com.fResult.resilienceWalletLedger.wallet.api
 
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
@@ -27,5 +26,5 @@ interface WalletService {
     walletId: WalletId,
     amount: Money,
     refTransactionId: String,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>>
+  ): Mono<Either<WalletException, Wallet>>
 }

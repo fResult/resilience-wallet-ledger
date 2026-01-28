@@ -2,11 +2,8 @@ package com.fResult.resilienceWalletLedger.wallet.internal.application.service
 
 import com.fResult.resilienceWalletLedger.common.Clock
 import com.fResult.resilienceWalletLedger.common.IdGenerator
-import com.fResult.resilienceWalletLedger.common.extension.flatMapRight
-import com.fResult.resilienceWalletLedger.common.extension.toLeft
 import com.fResult.resilienceWalletLedger.wallet.api.WalletService
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
@@ -68,6 +65,21 @@ class WalletApplicationService(
         )
       }
 
+  @Transactional
+  override fun withdraw(
+    walletId: WalletId,
+    amount: Money,
+    refTransactionId: String,
+  ): Mono<Either<WalletException, Wallet>> =
+    walletRepository
+      .findById(walletId)
+      .flatMap { walletOrError ->
+        walletOrError.fold(
+          { error -> Mono.just(Either.left(error)) },
+          processWithdrawalFor(amount, refTransactionId),
+        )
+      }
+
   private fun processDepositFor(
     amount: Money,
     refTransactionId: String,
@@ -92,49 +104,28 @@ class WalletApplicationService(
       )
     }
 
-  @Transactional
-  override fun withdraw(
-    walletId: WalletId,
+  private fun processWithdrawalFor(
     amount: Money,
     refTransactionId: String,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> =
-    walletRepository
-      .findById(walletId)
-      .map { it.flatMap(withdrawing(amount, refTransactionId)) }
-      .flatMap(::persist)
-
-  private fun withdrawing(
-    amount: Money,
-    refTransactionId: String,
-  ): (Wallet) -> Either<WalletException, Pair<Wallet, List<WalletEvent>>> =
+  ): (Wallet) -> Mono<Either<WalletException, Wallet>> =
     { wallet ->
-      // FIXME: Inject eventId, refTransactionId, occurredOn from method parameters
-      wallet.withdraw(
-        amount,
-        idGenerator.generate(),
-        refTransactionId,
-        clock.now(),
-      )
-    }
-          amount,
-          idGenerator.generate(),
-          clock.now(),
-    }
+      val eventId = idGenerator.generate()
+      val now = clock.now()
 
-  private fun persist(
-    walletOrError: Either<WalletException, Pair<Wallet, List<WalletEvent>>>,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> =
-    walletOrError.fold(
-      /*
-       * TODO: [Outbox]
-       * 1. Create `MoneyDepositFailed` event (with `eventId`, `walletId`, `amount`, `reason`)
-       * 2. Save event to Outbox Repository (Must commit transaction, DON'T rollback)
-       */
-      { Mono.just(it.toLeft()) },
-      { (wallet, events) ->
-        walletRepository
-          .save(wallet to events)
-          .flatMapRight { (wallet, events) -> Mono.just(Either.right(wallet to events)) }
-      },
-    )
+      wallet
+        .withdraw(amount, eventId, refTransactionId, now)
+        .fold(
+          { error ->
+            // Design Note: Future phase - Save `WithdrawalFailed` event here
+            Mono.just(Either.left(error))
+          },
+          { (walletToWithdraw, events) ->
+            walletRepository
+              .save(walletToWithdraw to events)
+              .map { result ->
+                result.map { (withdrawnWallet, _) -> withdrawnWallet }
+              }
+          },
+        )
+    }
 }
