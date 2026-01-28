@@ -58,11 +58,39 @@ class WalletApplicationService(
     walletId: WalletId,
     amount: Money,
     refTransactionId: String,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> =
+  ): Mono<Either<WalletException, Wallet>> =
     walletRepository
       .findById(walletId)
-      .map { it.flatMap(depositing(amount, refTransactionId)) }
-      .flatMap(::persist)
+      .flatMap { walletOrError ->
+        walletOrError.fold(
+          { error -> Mono.just(Either.left(error)) },
+          processDepositFor(amount, refTransactionId),
+        )
+      }
+
+  private fun processDepositFor(
+    amount: Money,
+    refTransactionId: String,
+  ): (Wallet) -> Mono<Either<WalletException, Wallet>> =
+    { wallet ->
+      val eventId = idGenerator.generate()
+      val now = clock.now()
+      val result = wallet.deposit(amount, eventId, refTransactionId, now)
+
+      result.fold(
+        { error ->
+          // Design Note: Future phase - Save `DepositFailed` event here
+          Mono.just(Either.left(error))
+        },
+        { (walletToDeposit, events) ->
+          walletRepository
+            .save(walletToDeposit to events)
+            .map { result ->
+              result.map { (depositedWallet, _) -> depositedWallet }
+            }
+        },
+      )
+    }
 
   @Transactional
   override fun withdraw(

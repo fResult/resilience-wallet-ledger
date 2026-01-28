@@ -21,7 +21,7 @@ interface WalletService {
     walletId: WalletId,
     amount: Money,
     refTransactionId: String,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>>
+  ): Mono<Either<WalletException, Wallet>>
 
   fun withdraw(
     walletId: WalletId,
