@@ -112,7 +112,7 @@ class WalletApplicationService(
     walletOrError.fold(
       /*
        * TODO: [Outbox]
-       * 1. Create `DepositFailedEvent` (`eventId`, `walletId`, `amount`, `reason`)
+       * 1. Create `MoneyDepositFailed` event (with `eventId`, `walletId`, `amount`, `reason`)
        * 2. Save event to Outbox Repository (Must commit transaction, DON'T rollback)
        */
       { Mono.just(it.toLeft()) },

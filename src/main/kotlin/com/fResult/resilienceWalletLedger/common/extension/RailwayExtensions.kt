@@ -5,10 +5,22 @@ import com.fResult.resilienceWalletLedger.common.error.ConcurrencyConflict
 import com.fResult.resilienceWalletLedger.common.error.DomainError
 import com.fResult.resilienceWalletLedger.common.error.ResourceNotFound
 import io.vavr.control.Either
-import java.time.Instant
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import reactor.core.publisher.Mono
+import java.time.Instant
+
+/**
+ * 🌉 The Bridge between Sync (Either) and Async (Mono).
+ * Allows chaining a Mono-returning function on the Right side of an Either.
+ *
+ * Reduces Entropy by eliminating explicit `fold` in the service layer.
+ */
+fun <L, R, T> Either<L, R>.flatMapRight(mapper: (R) -> Mono<Either<L, T>>): Mono<Either<L, T>> =
+  this.fold(
+    { left -> Mono.just(Either.left(left)) },
+    mapper,
+  )
 
 /**
  * Generic Extension to wrap any RuntimeException into Either.Left
