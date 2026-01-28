@@ -15,7 +15,7 @@ interface WalletService {
     walletName: String,
     ownerId: OwnerId,
     currency: Currency,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>>
+  ): Mono<Either<WalletException, Wallet>>
 
   fun deposit(
     walletId: WalletId,

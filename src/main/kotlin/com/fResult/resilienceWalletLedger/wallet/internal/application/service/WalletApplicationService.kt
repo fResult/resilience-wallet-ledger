@@ -3,7 +3,6 @@ package com.fResult.resilienceWalletLedger.wallet.internal.application.service
 import com.fResult.resilienceWalletLedger.common.Clock
 import com.fResult.resilienceWalletLedger.common.IdGenerator
 import com.fResult.resilienceWalletLedger.common.extension.flatMapRight
-import com.fResult.resilienceWalletLedger.common.extension.toEitherRight
 import com.fResult.resilienceWalletLedger.common.extension.toLeft
 import com.fResult.resilienceWalletLedger.wallet.api.WalletService
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
@@ -29,25 +28,30 @@ class WalletApplicationService(
     walletName: String,
     ownerId: OwnerId,
     currency: Currency,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> =
-    WalletId(idGenerator.generate())
-      .let {
-        Wallet.create(
-          it,
-          ownerId,
-          walletName,
-          currency,
-          idGenerator.generate(),
-          clock.now(),
-        )
-      }.let(walletRepository::save)
-      .toEitherRight { (wallet, events) ->
+  ): Mono<Either<WalletException, Wallet>> {
+    val walletId = WalletId(idGenerator.generate())
+    val eventId = idGenerator.generate()
+    val now = clock.now()
+    val (wallet, events) =
+      Wallet.create(
+        walletId,
+        ownerId,
+        walletName,
+        currency,
+        eventId,
+        now,
+      )
+
+    return walletRepository
+      .save(wallet to events)
+      .map { result ->
         /* Design note:
          * Publish domain events to notify other systems that a wallet was created
-         * (e.g. reporting, notifications, compliance, downstream processes)
+         * (e.g., reporting, notifications, compliance, downstream processes)
          */
-        Either.right(Pair(wallet, events))
+        result.map { (savedWallet, _) -> savedWallet }
       }
+  }
 
   @Transactional
   override fun deposit(
@@ -84,26 +88,9 @@ class WalletApplicationService(
         clock.now(),
       )
     }
-
-  private fun depositing(
-    amount: Money,
-    idempotencyKey: String,
-  ): (Wallet) -> Either<WalletException, Pair<Wallet, List<WalletEvent>>> =
-    {
-      it
-        // FIXME: Inject eventId, refTransactionId, occurredOn from method parameters
-        .deposit(
           amount,
           idGenerator.generate(),
-          idempotencyKey,
           clock.now(),
-        ).map { (wallet, events) ->
-          /* Design Note:
-           * Publish domain events to notify other systems that a wallet was created
-           * (e.g. reporting, notifications, compliance, downstream processes)
-           */
-          Pair(wallet, events)
-        }
     }
 
   private fun persist(
