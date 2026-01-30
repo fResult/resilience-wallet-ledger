@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence
 
+import com.fResult.resilienceWalletLedger.common.Clock
 import com.fResult.resilienceWalletLedger.common.annotation.PersistenceAdapter
 import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
 import com.fResult.resilienceWalletLedger.common.extension.bimapPair
@@ -37,6 +38,7 @@ class WalletPersistenceAdapter(
   private val walletRepository: SpringDataWalletRepository,
   private val outboxRepository: SpringDataOutboxRepository,
   private val mapper: ObjectMapper,
+  private val clock: Clock,
 ) : WalletRepository {
   override fun findById(id: WalletId): Mono<Either<WalletException, Wallet>> =
     walletRepository
@@ -103,7 +105,7 @@ class WalletPersistenceAdapter(
       // version is `null` for new entity (Optimistic Lock)
       version = if (domain.version == 0L) null else domain.version,
       createdAt = domain.createdAt,
-      updatedAt = Instant.now(),
+      updatedAt = clock.now(),
     )
 
   private fun outboxEntryFor(walletEntity: WalletEntity): (WalletEvent) -> WalletOutboxEntity =
