@@ -17,11 +17,11 @@ import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.BDDMockito.given
+import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
@@ -39,12 +39,8 @@ class WalletApplicationServiceTest {
   @Mock
   private lateinit var clock: Clock
 
+  @InjectMocks
   private lateinit var walletApplicationService: WalletApplicationService
-
-  @BeforeEach
-  fun setUp() {
-    walletApplicationService = WalletApplicationService(walletRepository, idGenerator, clock)
-  }
 
   @Nested
   inner class CreateWallet {
@@ -74,9 +70,8 @@ class WalletApplicationServiceTest {
       // Then
       StepVerifier
         .create(actualResult)
-        .assertNext { response ->
-          val walletResult = response.expectRight("Wallet created successfully")
-          val (createdWallet, events) = walletResult
+        .assertNext { result ->
+          val createdWallet = result.expectRight("Wallet created successfully")
 
           assertEquals(expectedOwnerId, createdWallet.ownerId)
           assertEquals(expectedWalletName, createdWallet.name)
@@ -114,14 +109,17 @@ class WalletApplicationServiceTest {
 
   @Nested
   inner class Deposit {
+    val walletUuid: UUID = UUID.fromString("019c0887-990e-7c44-842e-e6cb2f53d5ac")
+    val ownerUuid: UUID = UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a")
+    val fixedEventUuid: UUID = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
+    val fixedIdempotencyKey: UUID = UUID.fromString("019c088d-9968-7e1f-9a93-01a0b5d02d98")
+
     @Test
     fun `should return Right(Wallet) when deposit is successful`() {
       // Given
       val fixedTime = Instant.parse("2026-01-15T10:00:00Z")
-      val fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000001")
-      val fixedIdempotencyKey = UUID.fromString("99999999-9999-9999-9999-9999999999999")
-      val walletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
-      val ownerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+      val walletId = WalletId(walletUuid)
+      val ownerId = OwnerId(ownerUuid)
       val initialBalance = thb(1500)
       val initialVersion = 3L
       val amountToDeposit = thb(500)
@@ -134,7 +132,7 @@ class WalletApplicationServiceTest {
             ownerId,
             "My Wallet",
             initialBalance.currency,
-            fixedUuid,
+            fixedEventUuid,
             fixedTime,
           )
       val existingWallet = newWallet.copy(balance = initialBalance, version = initialVersion)
@@ -143,12 +141,21 @@ class WalletApplicationServiceTest {
         walletRepository.findById(existingWallet.id),
       ).willReturn(Mono.just(Either.right(existingWallet)))
 
+      given(idGenerator.generate()).willReturn(fixedEventUuid)
+      given(clock.now()).willReturn(fixedTime)
+
       given(
         walletRepository.save(any<Pair<Wallet, List<WalletEvent>>>()),
       ).willAnswer { invocation ->
-        val walletBeingDeposited = invocation.getArgument<Wallet>(0)
+        val (walletBeingDeposited, events) =
+          invocation
+            .getArgument<Pair<Wallet, List<WalletEvent>>>(
+              0,
+            )
         val depositedWallet = walletBeingDeposited.copy(version = walletBeingDeposited.version + 1)
-        Mono.just(Either.right<WalletException, Wallet>(depositedWallet))
+        Mono.just(
+          Either.right<WalletException, Pair<Wallet, List<WalletEvent>>>(depositedWallet to events),
+        )
       }
 
       // When
@@ -163,8 +170,7 @@ class WalletApplicationServiceTest {
       StepVerifier
         .create(actualResult)
         .assertNext { response ->
-          val walletResult = response.expectRight("Should deposit successfully")
-          val (actualResult, events) = walletResult
+          val actualResult = response.expectRight("Should deposit successfully")
 
           assertEquals(
             expectedBalance,
