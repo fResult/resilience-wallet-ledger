@@ -76,17 +76,17 @@ data class Wallet(
       ).toLeft()
     }
 
-    val balanceToDeposit = balance + amount
+    val balanceToUpdate = balance + amount
     val event =
       MoneyDeposited(
         eventId = eventId,
-        currentBalance = amount,
-        amount = balanceToDeposit,
+        currentBalance = balanceToUpdate,
+        amount = amount,
         refTransactionId = refTransactionId,
         occurredOn = occurredOn,
       )
 
-    return Either.right(this.copy(balance = balanceToDeposit) to listOf(event))
+    return Either.right(this.copy(balance = balanceToUpdate) to listOf(event))
   }
 
   fun withdraw(
@@ -112,17 +112,17 @@ data class Wallet(
       ).toLeft()
     }
 
-    val balanceToWithdraw = balance - amount
+    val balanceToUpdate = balance - amount
     val event =
       MoneyWithdrawn(
         eventId = eventId,
-        currentBalance = amount,
-        amount = balanceToWithdraw,
+        currentBalance = balanceToUpdate,
+        amount = amount,
         refTransactionId = refTransactionId,
         occurredOn = occurredOn,
       )
 
-    return Either.right(this.copy(balance = balanceToWithdraw) to listOf(event))
+    return Either.right(this.copy(balance = balanceToUpdate) to listOf(event))
   }
 
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
