@@ -5,13 +5,13 @@ import reactor.core.publisher.Mono
 
 // mapRight
 fun <L, R, T> Mono<Either<L, R>>.toEitherRight(mapper: (R) -> Either<L, T>): Mono<Either<L, T>> =
-  this.map { either -> either.flatMap(mapper) }
+  this.map { result -> result.flatMap(mapper) }
 
 fun <L, R, T> Mono<Either<L, R>>.flatMapRight(
   mapper: (R) -> Mono<Either<L, T>>,
 ): Mono<Either<L, T>> =
-  this.flatMap { either ->
-    either.fold({ left -> Mono.just(Either.left(left)) }, mapper)
+  this.flatMap { result ->
+    result.fold({ error -> Mono.just(Either.left(error)) }, mapper)
   }
 
 fun <A, B, C, D> Mono<Pair<A, B>>.bimapPair(
