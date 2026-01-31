@@ -1,9 +1,11 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence
 
+import com.fResult.resilienceWalletLedger.common.Clock
 import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
+import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletOutboxEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataOutboxRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
@@ -31,18 +33,18 @@ import org.mockito.kotlin.any
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.OptimisticLockingFailureException
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import tools.jackson.databind.ObjectMapper
 
 class WalletPersistenceAdapterTest {
-  private val walletRepository: SpringDataWalletRepository =
-    mock(SpringDataWalletRepository::class.java)
-  private val outboxRepository: SpringDataOutboxRepository =
-    mock(SpringDataOutboxRepository::class.java)
+  private val walletRepository = mock(SpringDataWalletRepository::class.java)
+  private val outboxRepository = mock(SpringDataOutboxRepository::class.java)
   private val mapper = mock(ObjectMapper::class.java)
+  private var clock = mock(Clock::class.java)
 
-  private val adapter = WalletPersistenceAdapter(walletRepository, outboxRepository, mapper)
+  private val adapter = WalletPersistenceAdapter(walletRepository, outboxRepository, mapper, clock)
 
   private val mockWalletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
   private val mockOwnerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
@@ -117,8 +119,11 @@ class WalletPersistenceAdapterTest {
     val wallet = createWallet()
     val entity = createWalletEntity(wallet.id.value)
     val events = emptyList<WalletEvent>()
+    val fixedTime = Instant.parse("2026-01-15T10:00:00Z")
 
+    given(clock.now()).willReturn(fixedTime)
     given(walletRepository.save(any<WalletEntity>())).willReturn(Mono.just(entity))
+    given(outboxRepository.saveAll(any<List<WalletOutboxEntity>>())).willReturn(Flux.empty())
 
     // When
     val response = adapter.save(wallet to events)
