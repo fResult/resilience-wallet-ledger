@@ -5,6 +5,7 @@ import com.fResult.resilienceWalletLedger.common.IdGenerator
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
@@ -125,16 +126,9 @@ class WalletApplicationServiceTest {
       val amountToDeposit = thb(500)
       val expectedBalance = initialBalance + amountToDeposit
       val expectedVersion = 4L
-      val (newWallet, events) =
-        Wallet
-          .create(
-            walletId,
-            ownerId,
-            "My Wallet",
-            initialBalance.currency,
-            fixedEventUuid,
-            fixedTime,
-          )
+      val command =
+        CreateWalletCommand(walletId, ownerId, "My Wallet", Currency.THB, fixedEventUuid, fixedTime)
+      val (newWallet, events) = Wallet.create(command)
       val existingWallet = newWallet.copy(balance = initialBalance, version = initialVersion)
 
       given(

@@ -1,6 +1,7 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
 import com.fResult.resilienceWalletLedger.common.extension.toLeft
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyWithdrawn
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
@@ -23,33 +24,26 @@ data class Wallet(
   val version: Long = 0,
 ) {
   companion object {
-    fun create(
-      walletId: WalletId,
-      ownerId: OwnerId,
-      name: String,
-      currency: Currency,
-      eventId: UUID,
-      occurredOn: Instant,
-    ): Pair<Wallet, List<WalletEvent>> =
+    fun create(command: CreateWalletCommand): Pair<Wallet, List<WalletEvent>> =
       Wallet(
-        id = walletId,
-        name = name,
-        balance = Money(BigDecimal.ZERO, currency),
-        ownerId = ownerId,
+        id = command.walletId,
+        name = command.name,
+        balance = Money(BigDecimal.ZERO, command.currency),
+        ownerId = command.ownerId,
         status = WalletStatus.ACTIVE,
-        createdAt = occurredOn,
+        createdAt = command.occurredOn,
         version = 0L,
         linkedBankAccountId = null,
       ).let(
         pairWithEvents(
           WalletCreated(
-            eventId = eventId,
-            walletId = walletId,
-            ownerId = ownerId,
+            eventId = command.eventId,
+            walletId = command.walletId,
+            ownerId = command.ownerId,
             linkedBankAccountId = null,
-            name = name,
-            initialBalance = Money(BigDecimal.ZERO, currency),
-            occurredOn = occurredOn,
+            name = command.name,
+            initialBalance = Money(BigDecimal.ZERO, command.currency),
+            occurredOn = command.occurredOn,
           ),
         ),
       )
