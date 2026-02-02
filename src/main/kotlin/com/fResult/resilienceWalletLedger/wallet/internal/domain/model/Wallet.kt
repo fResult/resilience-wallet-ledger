@@ -2,6 +2,7 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
 import com.fResult.resilienceWalletLedger.common.extension.toLeft
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyWithdrawn
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
@@ -52,12 +53,8 @@ data class Wallet(
       { wallet -> wallet to listOf(event) }
   }
 
-  fun deposit(
-    amount: Money,
-    eventId: UUID,
-    refTransactionId: String,
-    occurredOn: Instant,
-  ): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
+  fun deposit(command: DepositCommand): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
+    val (amount, refTransactionId, eventId, occurredOn) = command
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid deposit amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",

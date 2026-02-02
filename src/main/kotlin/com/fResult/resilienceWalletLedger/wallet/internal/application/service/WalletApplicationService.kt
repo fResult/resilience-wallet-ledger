@@ -5,6 +5,7 @@ import com.fResult.resilienceWalletLedger.common.IdGenerator
 import com.fResult.resilienceWalletLedger.wallet.api.WalletService
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
@@ -89,7 +90,8 @@ class WalletApplicationService(
     { wallet ->
       val eventId = idGenerator.generate()
       val now = clock.now()
-      val result = wallet.deposit(amount, eventId, refTransactionId, now)
+      val depositCommand = DepositCommand(amount, refTransactionId, eventId, now)
+      val result = wallet.deposit(depositCommand)
 
       result.fold(
         { error ->

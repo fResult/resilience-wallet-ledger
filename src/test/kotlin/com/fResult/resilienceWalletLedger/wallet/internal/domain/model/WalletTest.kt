@@ -2,6 +2,7 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
 import java.time.Instant
@@ -25,15 +26,10 @@ class WalletTest {
     val initialWallet = createActiveUsdWallet(1000)
     val expectedResult = initialWallet.copy(balance = usd(1100))
     val depositAmount = usd(100)
+    val depositCommand = createDepositCommand(depositAmount, Instant.now())
 
     // When
-    val result =
-      initialWallet.deposit(
-        depositAmount,
-        fixedUuid,
-        fixedIdempotencyKey.toString(),
-        Instant.now(),
-      )
+    val result = initialWallet.deposit(depositCommand)
 
     // Then
     val actualResult = result.expectRight("Deposit should succeed")
@@ -47,15 +43,11 @@ class WalletTest {
       "Currency mismatch! Cannot deposit [${Currency.THB}] to [${Currency.USD}]"
     val initialWallet = createActiveUsdWallet(100)
     val depositAmount = thb(1000)
+    val depositCommand = createDepositCommand(depositAmount, Instant.now())
 
     // When
     val result =
-      initialWallet.deposit(
-        depositAmount,
-        fixedUuid,
-        fixedIdempotencyKey.toString(),
-        Instant.now(),
-      )
+      initialWallet.deposit(depositCommand)
 
     // Then
     val actualError = result.expectLeft("Deposit should fail")
@@ -70,15 +62,10 @@ class WalletTest {
       "Invalid deposit amount: [$invalidAmount ${Currency.USD}]. Must be greater than zero"
     val initialWallet = createActiveUsdWallet(100)
     val depositAmount = usd(invalidAmount)
+    val depositCommand = createDepositCommand(depositAmount, Instant.now())
 
     // When
-    val result =
-      initialWallet.deposit(
-        depositAmount,
-        fixedUuid,
-        fixedIdempotencyKey.toString(),
-        Instant.now(),
-      )
+    val result = initialWallet.deposit(depositCommand)
 
     // Then
     val actualError = result.expectLeft("Deposit should fail")
@@ -208,6 +195,11 @@ class WalletTest {
   }
 
   private fun createActiveUsdWallet(amount: Int): Wallet = createActiveWallet(usd(amount))
+
+  fun createDepositCommand(
+    amount: Money,
+    occurredOn: Instant,
+  ) = DepositCommand(amount, fixedIdempotencyKey.toString(), fixedUuid, occurredOn)
 
   private fun createActiveWallet(balance: Money) =
     Wallet(
