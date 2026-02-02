@@ -3,6 +3,7 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.WithdrawalCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
 import java.time.Instant
@@ -92,15 +93,10 @@ class WalletTest {
     val initialWallet = createActiveUsdWallet(1000)
     val expectedResult = initialWallet.copy(balance = usd(900))
     val withdrawalAmount = usd(100)
+    val withdrawalCommand = createWithdrawalCommand(withdrawalAmount, Instant.now())
 
     // When
-    val result =
-      initialWallet.withdraw(
-        withdrawalAmount,
-        fixedUuid,
-        fixedIdempotencyKey.toString(),
-        Instant.now(),
-      )
+    val result = initialWallet.withdraw(withdrawalCommand)
 
     // Then
     val actualResult = result.expectRight("Withdrawal should succeed")
@@ -114,16 +110,11 @@ class WalletTest {
     val expectedErrorMessage =
       "Invalid withdraw amount: [$invalidAmount ${Currency.USD}]. Must be greater than zero"
     val initialWallet = createActiveUsdWallet(100)
-    val depositAmount = usd(invalidAmount)
+    val withdrawalAmount = usd(invalidAmount)
+    val withdrawalCommand = createWithdrawalCommand(withdrawalAmount, Instant.now())
 
     // When
-    val result =
-      initialWallet.withdraw(
-        depositAmount,
-        fixedUuid,
-        fixedIdempotencyKey.toString(),
-        Instant.now(),
-      )
+    val result = initialWallet.withdraw(withdrawalCommand)
 
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")
@@ -151,15 +142,10 @@ class WalletTest {
       "Currency mismatch! Cannot withdraw [${Currency.THB}] from [${Currency.USD}]"
     val initialWallet = createActiveUsdWallet(100)
     val withdrawalAmount = thb(1000)
+    val withdrawalCommand = createWithdrawalCommand(withdrawalAmount, Instant.now())
 
     // When
-    val result =
-      initialWallet.withdraw(
-        withdrawalAmount,
-        fixedUuid,
-        fixedIdempotencyKey.toString(),
-        Instant.now(),
-      )
+    val result = initialWallet.withdraw(withdrawalCommand)
 
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")
@@ -175,15 +161,10 @@ class WalletTest {
       "Insufficient Balance! Cannot withdraw $withdrawAmountVal ${Currency.USD}"
     val initialWallet = createActiveUsdWallet(initialBalanceAmount)
     val withdrawalAmount = usd(withdrawAmountVal)
+    val withdrawalCommand = createWithdrawalCommand(withdrawalAmount, Instant.now())
 
     // When
-    val result =
-      initialWallet.withdraw(
-        withdrawalAmount,
-        fixedUuid,
-        fixedIdempotencyKey.toString(),
-        Instant.now(),
-      )
+    val result = initialWallet.withdraw(withdrawalCommand)
 
     // Then
     val actualError = result.expectLeft("Withdrawal should fail")
@@ -200,6 +181,11 @@ class WalletTest {
     amount: Money,
     occurredOn: Instant,
   ) = DepositCommand(amount, fixedIdempotencyKey.toString(), fixedUuid, occurredOn)
+
+  fun createWithdrawalCommand(
+    amount: Money,
+    occurredOn: Instant,
+  ) = WithdrawalCommand(amount, fixedIdempotencyKey.toString(), fixedUuid, occurredOn)
 
   private fun createActiveWallet(balance: Money) =
     Wallet(

@@ -6,6 +6,7 @@ import com.fResult.resilienceWalletLedger.wallet.api.WalletService
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.WithdrawalCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
@@ -115,9 +116,10 @@ class WalletApplicationService(
     { wallet ->
       val eventId = idGenerator.generate()
       val now = clock.now()
+      val withdrawalCommand = WithdrawalCommand(amount, refTransactionId, eventId, now)
 
       wallet
-        .withdraw(amount, eventId, refTransactionId, now)
+        .withdraw(withdrawalCommand)
         .fold(
           { error ->
             // Design Note: Future phase - Save `WithdrawalFailed` event here

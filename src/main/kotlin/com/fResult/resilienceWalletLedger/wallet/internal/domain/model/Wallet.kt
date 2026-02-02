@@ -3,6 +3,7 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 import com.fResult.resilienceWalletLedger.common.extension.toLeft
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.WithdrawalCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyWithdrawn
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
@@ -12,7 +13,6 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.Walle
 import io.vavr.control.Either
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 data class Wallet(
   val id: WalletId,
@@ -81,11 +81,9 @@ data class Wallet(
   }
 
   fun withdraw(
-    amount: Money,
-    eventId: UUID,
-    refTransactionId: String,
-    occurredOn: Instant,
+    command: WithdrawalCommand,
   ): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
+    val (amount, refTransactionId, eventId, occurredOn) = command
     if (!amount.isPositive()) {
       return WalletException(
         "Invalid withdraw amount: [${amount.amount} ${amount.currency}]. Must be greater than zero",
