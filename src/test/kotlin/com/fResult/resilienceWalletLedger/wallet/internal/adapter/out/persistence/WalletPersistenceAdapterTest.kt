@@ -8,6 +8,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistenc
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletOutboxEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataOutboxRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletAlreadyExistsException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletConcurrencyException
@@ -20,6 +21,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletStatus
+import io.r2dbc.postgresql.codec.Json
 import java.math.BigDecimal
 import java.time.Instant
 import java.util.UUID
@@ -37,15 +39,19 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import tools.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 
 class WalletPersistenceAdapterTest {
   private val walletRepository = mock(SpringDataWalletRepository::class.java)
   private val outboxRepository = mock(SpringDataOutboxRepository::class.java)
   private val mapper = mock(ObjectMapper::class.java)
-  private var clock = mock(Clock::class.java)
+  private val clock = mock(Clock::class.java)
 
   private val adapter = WalletPersistenceAdapter(walletRepository, outboxRepository, mapper, clock)
 
+  private val neededMapper = JsonMapper.builder().findAndAddModules().build()
+
+  private val mockEventId = UUID.fromString("00000000-0000-0000-0000-000000000004")
   private val mockWalletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
   private val mockOwnerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
   private val mockBankAccountId =
@@ -120,10 +126,24 @@ class WalletPersistenceAdapterTest {
     val entity = createWalletEntity(wallet.id.value)
     val events = emptyList<WalletEvent>()
     val fixedTime = Instant.parse("2026-01-15T10:00:00Z")
+    val mockWalletCreated =
+      WalletCreated(
+        mockEventId,
+        mockWalletId,
+        mockOwnerId,
+        mockBankAccountId,
+        "Test Wallet",
+        Money(BigDecimal.TEN, Currency.USD),
+        Instant.now(),
+      )
+    val expectedResult = createWalletEntity(wallet.id.value)
+    val expectedEvent = createWalletCreatedEvent(expectedResult, mockWalletCreated)
 
     given(clock.now()).willReturn(fixedTime)
     given(walletRepository.save(any<WalletEntity>())).willReturn(Mono.just(entity))
-    given(outboxRepository.saveAll(any<List<WalletOutboxEntity>>())).willReturn(Flux.empty())
+    given(
+      outboxRepository.saveAll(any<List<WalletOutboxEntity>>()),
+    ).willReturn(Flux.just(expectedEvent))
 
     // When
     val response = adapter.save(wallet to events)
@@ -300,4 +320,16 @@ class WalletPersistenceAdapterTest {
       createdAt = Instant.now(),
       version = 1L,
     )
+
+  private fun createWalletCreatedEvent(
+    walletEntity: WalletEntity,
+    walletEvent: WalletCreated,
+  ) = WalletOutboxEntity(
+    _id = mockEventId,
+    walletId = walletEntity.id,
+    version = 1,
+    eventType = walletEvent.javaClass.simpleName,
+    payload = Json.of(neededMapper.writeValueAsString(walletEvent)),
+    occurredOn = walletEvent.occurredOn,
+  )
 }
