@@ -25,7 +25,7 @@ data class Wallet(
   val version: Long = 0,
 ) {
   companion object {
-    fun create(command: CreateWalletCommand): Pair<Wallet, List<WalletEvent>> =
+    fun create(command: CreateWalletCommand): WalletWithEvents =
       Wallet(
         id = command.walletId,
         name = command.name,
@@ -49,8 +49,8 @@ data class Wallet(
         ),
       )
 
-    private fun pairWithEvents(event: WalletEvent): (Wallet) -> Pair<Wallet, List<WalletEvent>> =
-      { wallet -> wallet to listOf(event) }
+    private fun pairWithEvents(event: WalletEvent): (Wallet) -> WalletWithEvents =
+      { wallet -> WalletWithEvents(wallet to listOf(event)) }
   }
 
   fun deposit(command: DepositCommand): WalletResult {
@@ -81,9 +81,7 @@ data class Wallet(
     return Either.right(walletWithEvents)
   }
 
-  fun withdraw(
-    command: WithdrawalCommand,
-  ): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
+  fun withdraw(command: WithdrawalCommand): WalletResult {
     val (amount, refTransactionId, eventId, occurredOn) = command
     if (!amount.isPositive()) {
       return WalletException(
@@ -111,8 +109,9 @@ data class Wallet(
         refTransactionId = refTransactionId,
         occurredOn = occurredOn,
       )
+    val walletWithEvents = WalletWithEvents(this.copy(balance = balanceToUpdate) to listOf(event))
 
-    return Either.right(this.copy(balance = balanceToUpdate) to listOf(event))
+    return Either.right(walletWithEvents)
   }
 
   private fun currencyMismatched(money: Money): Boolean = money.currency != balance.currency
