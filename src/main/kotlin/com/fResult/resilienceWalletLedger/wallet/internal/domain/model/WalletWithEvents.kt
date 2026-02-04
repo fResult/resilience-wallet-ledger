@@ -11,6 +11,8 @@ import io.vavr.control.Either
 data class WalletWithEvents(
   val wallet: Wallet,
   val events: List<WalletEvent>,
-)
+) {
+  constructor(pair: Pair<Wallet, List<WalletEvent>>) : this(pair.first, pair.second)
+}
 
 typealias WalletResult = Either<WalletException, WalletWithEvents>

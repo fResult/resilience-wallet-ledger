@@ -53,7 +53,7 @@ data class Wallet(
       { wallet -> wallet to listOf(event) }
   }
 
-  fun deposit(command: DepositCommand): Either<WalletException, Pair<Wallet, List<WalletEvent>>> {
+  fun deposit(command: DepositCommand): WalletResult {
     val (amount, refTransactionId, eventId, occurredOn) = command
     if (!amount.isPositive()) {
       return WalletException(
@@ -76,8 +76,9 @@ data class Wallet(
         refTransactionId = refTransactionId,
         occurredOn = occurredOn,
       )
+    val walletWithEvents = WalletWithEvents(this.copy(balance = balanceToUpdate) to listOf(event))
 
-    return Either.right(this.copy(balance = balanceToUpdate) to listOf(event))
+    return Either.right(walletWithEvents)
   }
 
   fun withdraw(
