@@ -96,8 +96,11 @@ class WalletPersistenceAdapterTest {
   @Test
   fun `findById should fail with InvariantViolationException on corrupted data`() {
     // Given
-    @Suppress("CAST_NEVER_SUCCEEDS")
-    val corruptedEntity = createWalletEntity(mockWalletId.value).copy(_id = null as UUID)
+    val corruptedEntity = createWalletEntity(mockWalletId.value)
+    corruptedEntity::class.java.getDeclaredField("_id").apply {
+      isAccessible = true
+      set(corruptedEntity, null)
+    }
     given(walletRepository.findById(mockWalletId.value)).willReturn(Mono.just(corruptedEntity))
 
     // When
