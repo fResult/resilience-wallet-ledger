@@ -7,6 +7,7 @@ import java.util.UUID
 data class MoneyWithdrawn(
   override val eventId: UUID,
   val amount: Money,
+  /** Post-transaction balance */
   val currentBalance: Money,
   val refTransactionId: String,
   override val occurredOn: Instant,

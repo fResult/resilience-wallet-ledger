@@ -58,7 +58,7 @@ class WalletPersistenceAdapter(
     return wallet
       .let(::toEntity)
       .let(walletRepository::save)
-//      .switchIfEmpty(Mono.error(WalletException("Save returned empty")))
+      .switchIfEmpty(Mono.defer { Mono.error(WalletException("Save returned empty")) })
       .zipWhen(recordEvents(events), ::toWalletWithEvents)
       .commandToEither(translatePersistenceError(wallet.id.value))
   }
