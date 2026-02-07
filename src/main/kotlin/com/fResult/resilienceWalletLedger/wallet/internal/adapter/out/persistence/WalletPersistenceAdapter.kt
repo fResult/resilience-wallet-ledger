@@ -52,21 +52,21 @@ class WalletPersistenceAdapter(
         WalletNotFoundException("Wallet with ID ${id.value} not found")
       }
 
-  override fun save(
-    data: Pair<Wallet, List<WalletEvent>>,
-  ): Mono<WalletResult<WalletWithEvents>> {
+  override fun save(data: Pair<Wallet, List<WalletEvent>>): Mono<WalletResult<WalletWithEvents>> {
     val (wallet, events) = data
 
     return wallet
       .let(::toEntity)
       .let(walletRepository::save)
-      .switchIfEmpty(Mono.error(WalletException("Save returned empty")))
+//      .switchIfEmpty(Mono.error(WalletException("Save returned empty")))
       .zipWhen(recordEvents(events), ::toWalletWithEvents)
       .commandToEither(translatePersistenceError(wallet.id.value))
   }
 
-  private fun toWalletWithEvents(savedWallet: WalletEntity, recordedEvents: List<WalletOutboxEntity>): WalletWithEvents =
-    WalletWithEvents(toDomain(savedWallet), recordedEvents.map(::toDomainEvent))
+  private fun toWalletWithEvents(
+    savedWallet: WalletEntity,
+    recordedEvents: List<WalletOutboxEntity>,
+  ): WalletWithEvents = WalletWithEvents(toDomain(savedWallet), recordedEvents.map(::toDomainEvent))
 
   private fun recordEvents(
     events: List<WalletEvent>,
@@ -129,9 +129,24 @@ class WalletPersistenceAdapter(
 
   private fun toDomainEvent(outboxEntity: WalletOutboxEntity): WalletEvent =
     when (outboxEntity.eventType) {
-      WalletCreated::class.simpleName -> mapper.readValue(outboxEntity.payload.asString(), WalletCreated::class.java)
-      MoneyDeposited::class.simpleName -> mapper.readValue(outboxEntity.payload.asString(), MoneyDeposited::class.java)
-      MoneyWithdrawn::class.simpleName -> mapper.readValue(outboxEntity.payload.asString(), MoneyWithdrawn::class.java)
+      WalletCreated::class.simpleName ->
+        mapper.readValue(
+          outboxEntity.payload.asString(),
+          WalletCreated::class.java,
+        )
+
+      MoneyDeposited::class.simpleName ->
+        mapper.readValue(
+          outboxEntity.payload.asString(),
+          MoneyDeposited::class.java,
+        )
+
+      MoneyWithdrawn::class.simpleName ->
+        mapper.readValue(
+          outboxEntity.payload.asString(),
+          MoneyWithdrawn::class.java,
+        )
+
       else -> throw WalletException("Unknown event type: ${outboxEntity.eventType}")
     }
 

@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.mock
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.OptimisticLockingFailureException
@@ -46,11 +47,9 @@ class WalletPersistenceAdapterTest {
   private val outboxRepository = mock(SpringDataOutboxRepository::class.java)
   private val mapper = mock(ObjectMapper::class.java)
   private val clock = mock(Clock::class.java)
-
   private val adapter = WalletPersistenceAdapter(walletRepository, outboxRepository, mapper, clock)
 
   private val neededMapper = JsonMapper.builder().findAndAddModules().build()
-
   private val mockEventId = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
   private val mockWalletId = WalletId(UUID.fromString("019c0887-990e-7c44-842e-e6cb2f53d5ac"))
   private val mockOwnerId = OwnerId(UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a"))
@@ -137,13 +136,24 @@ class WalletPersistenceAdapterTest {
         Instant.now(),
       )
     val expectedResult = createWalletEntity(wallet.id.value)
-    val expectedEvent = createWalletCreatedEvent(expectedResult, mockWalletCreated)
+    val expectedOutbox = createWalletCreatedEntity(expectedResult, mockWalletCreated)
+    val expectedEvent =
+      WalletCreated(
+        mockEventId,
+        wallet.id,
+        wallet.ownerId,
+        wallet.linkedBankAccountId,
+        wallet.name,
+        wallet.balance,
+        fixedTime,
+      )
 
     given(clock.now()).willReturn(fixedTime)
     given(walletRepository.save(any<WalletEntity>())).willReturn(Mono.just(entity))
     given(
       outboxRepository.saveAll(any<List<WalletOutboxEntity>>()),
-    ).willReturn(Flux.just(expectedEvent))
+    ).willReturn(Flux.just(expectedOutbox))
+    given(mapper.readValue(any<String>(), eq(WalletCreated::class.java))).willReturn(expectedEvent)
 
     // When
     val response = adapter.save(wallet to events)
@@ -321,7 +331,7 @@ class WalletPersistenceAdapterTest {
       version = 1L,
     )
 
-  private fun createWalletCreatedEvent(
+  private fun createWalletCreatedEntity(
     walletEntity: WalletEntity,
     walletEvent: WalletCreated,
   ) = WalletOutboxEntity(
