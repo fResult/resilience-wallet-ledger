@@ -13,6 +13,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletResult
 import io.vavr.control.Either
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -28,7 +29,7 @@ class WalletApplicationService(
     walletName: String,
     ownerId: OwnerId,
     currency: Currency,
-  ): Mono<Either<WalletException, Wallet>> {
+  ): Mono<WalletResult<Wallet>> {
     val walletId = WalletId(idGenerator.generate())
     val eventId = idGenerator.generate()
     val now = clock.now()
@@ -59,7 +60,7 @@ class WalletApplicationService(
     walletId: WalletId,
     amount: Money,
     refTransactionId: String,
-  ): Mono<Either<WalletException, Wallet>> =
+  ): Mono<WalletResult<Wallet>> =
     walletRepository
       .findById(walletId)
       .flatMap { walletOrError ->
@@ -74,7 +75,7 @@ class WalletApplicationService(
     walletId: WalletId,
     amount: Money,
     refTransactionId: String,
-  ): Mono<Either<WalletException, Wallet>> =
+  ): Mono<WalletResult<Wallet>> =
     walletRepository
       .findById(walletId)
       .flatMap { walletOrError ->
@@ -87,7 +88,7 @@ class WalletApplicationService(
   private fun processDepositFor(
     amount: Money,
     refTransactionId: String,
-  ): (Wallet) -> Mono<Either<WalletException, Wallet>> =
+  ): (Wallet) -> Mono<WalletResult<Wallet>> =
     { wallet ->
       val eventId = idGenerator.generate()
       val now = clock.now()

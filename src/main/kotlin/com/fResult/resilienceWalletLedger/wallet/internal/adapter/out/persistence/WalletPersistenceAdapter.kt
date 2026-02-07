@@ -3,7 +3,6 @@ package com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persisten
 import com.fResult.resilienceWalletLedger.common.Clock
 import com.fResult.resilienceWalletLedger.common.annotation.PersistenceAdapter
 import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
-import com.fResult.resilienceWalletLedger.common.extension.bimapPair
 import com.fResult.resilienceWalletLedger.common.extension.commandToEither
 import com.fResult.resilienceWalletLedger.common.extension.queryToEither
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
@@ -11,6 +10,9 @@ import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistenc
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataOutboxRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyWithdrawn
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletAlreadyExistsException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletConcurrencyException
@@ -22,7 +24,9 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletResult
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletStatus
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletWithEvents
 import io.r2dbc.postgresql.codec.Json
 import io.vavr.control.Either
 import java.time.Instant
@@ -50,16 +54,19 @@ class WalletPersistenceAdapter(
 
   override fun save(
     data: Pair<Wallet, List<WalletEvent>>,
-  ): Mono<Either<WalletException, Pair<Wallet, List<WalletEvent>>>> {
+  ): Mono<WalletResult<WalletWithEvents>> {
     val (wallet, events) = data
 
     return wallet
       .let(::toEntity)
       .let(walletRepository::save)
-      .zipWhen(recordEvents(events), ::Pair)
-      .bimapPair(::toDomain) { events }
+      .switchIfEmpty(Mono.error(WalletException("Save returned empty")))
+      .zipWhen(recordEvents(events), ::toWalletWithEvents)
       .commandToEither(translatePersistenceError(wallet.id.value))
   }
+
+  private fun toWalletWithEvents(savedWallet: WalletEntity, recordedEvents: List<WalletOutboxEntity>): WalletWithEvents =
+    WalletWithEvents(toDomain(savedWallet), recordedEvents.map(::toDomainEvent))
 
   private fun recordEvents(
     events: List<WalletEvent>,
@@ -118,6 +125,14 @@ class WalletPersistenceAdapter(
         payload = Json.of(mapper.writeValueAsString(event)),
         occurredOn = event.occurredOn,
       )
+    }
+
+  private fun toDomainEvent(outboxEntity: WalletOutboxEntity): WalletEvent =
+    when (outboxEntity.eventType) {
+      WalletCreated::class.simpleName -> mapper.readValue(outboxEntity.payload.asString(), WalletCreated::class.java)
+      MoneyDeposited::class.simpleName -> mapper.readValue(outboxEntity.payload.asString(), MoneyDeposited::class.java)
+      MoneyWithdrawn::class.simpleName -> mapper.readValue(outboxEntity.payload.asString(), MoneyWithdrawn::class.java)
+      else -> throw WalletException("Unknown event type: ${outboxEntity.eventType}")
     }
 
   private fun translatePersistenceError(id: UUID): (Throwable) -> WalletException =

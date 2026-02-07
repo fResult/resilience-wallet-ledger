@@ -15,4 +15,4 @@ data class WalletWithEvents(
   constructor(pair: Pair<Wallet, List<WalletEvent>>) : this(pair.first, pair.second)
 }
 
-typealias WalletResult = Either<WalletException, WalletWithEvents>
+typealias WalletResult<T> = Either<WalletException, T>
