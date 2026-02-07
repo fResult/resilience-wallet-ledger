@@ -51,11 +51,11 @@ class WalletPersistenceAdapterTest {
 
   private val neededMapper = JsonMapper.builder().findAndAddModules().build()
 
-  private val mockEventId = UUID.fromString("00000000-0000-0000-0000-000000000004")
-  private val mockWalletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
-  private val mockOwnerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+  private val mockEventId = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
+  private val mockWalletId = WalletId(UUID.fromString("019c0887-990e-7c44-842e-e6cb2f53d5ac"))
+  private val mockOwnerId = OwnerId(UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a"))
   private val mockBankAccountId =
-    BankAccountId(UUID.fromString("00000000-0000-0000-0000-000000000003"))
+    BankAccountId(UUID.fromString("019c29c5-fda1-7d56-b290-ed0c4afbeeb8"))
 
   @Test
   fun `findById should return Right(Wallet) when entity exists`() {

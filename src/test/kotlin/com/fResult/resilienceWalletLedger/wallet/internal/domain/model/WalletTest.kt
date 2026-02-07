@@ -14,12 +14,12 @@ import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 
 class WalletTest {
-  private val walletId = WalletId(UUID.fromString("00000000-0000-0000-0000-000000000001"))
-  private val ownerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+  private val walletId = WalletId(UUID.fromString("019c0887-990e-7c44-842e-e6cb2f53d5ac"))
+  private val ownerId = OwnerId(UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a"))
   private val linkedBankAccountId =
-    BankAccountId(UUID.fromString("00000000-0000-0000-0000-000000000003"))
-  private val fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000001")
-  private val fixedIdempotencyKey = UUID.fromString("99999999-9999-9999-9999-9999999999999")
+    BankAccountId(UUID.fromString("019c29c5-fda1-7d56-b290-ed0c4afbeeb8"))
+  private val fixedEventUuid = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
+  private val fixedIdempotencyKey = UUID.fromString("019c088d-9968-7e1f-9a93-01a0b5d02d98")
 
   @Test
   fun `deposit with positive amount should succeed and increase balance`() {
@@ -180,12 +180,12 @@ class WalletTest {
   fun createDepositCommand(
     amount: Money,
     occurredOn: Instant,
-  ) = DepositCommand(amount, fixedIdempotencyKey.toString(), fixedUuid, occurredOn)
+  ) = DepositCommand(amount, fixedIdempotencyKey.toString(), fixedEventUuid, occurredOn)
 
   fun createWithdrawalCommand(
     amount: Money,
     occurredOn: Instant,
-  ) = WithdrawalCommand(amount, fixedIdempotencyKey.toString(), fixedUuid, occurredOn)
+  ) = WithdrawalCommand(amount, fixedIdempotencyKey.toString(), fixedEventUuid, occurredOn)
 
   private fun createActiveWallet(balance: Money) =
     Wallet(

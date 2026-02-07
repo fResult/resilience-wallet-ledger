@@ -1,6 +1,7 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
 import com.fResult.resilienceWalletLedger.common.exception.InvariantViolationException
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.vavr.control.Either
 import java.math.BigDecimal
 
@@ -48,5 +49,6 @@ data class Money(
     return Money(this.amount.subtract(other.amount), this.currency)
   }
 
+  @JsonIgnore
   fun isPositive() = amount > BigDecimal.ZERO
 }

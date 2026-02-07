@@ -45,12 +45,12 @@ class WalletApplicationServiceTest {
 
   @Nested
   inner class CreateWallet {
-    private val expectedOwnerId = OwnerId(UUID.fromString("00000000-0000-0000-0000-000000000002"))
+    private val expectedOwnerId = OwnerId(UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a"))
     private val expectedWalletName = "My Wallet"
     private val expectedBalance = Money(BigDecimal.ZERO, Currency.JPY)
     private val expectedVersion = 1L
     private val fixedTime = Instant.parse("2026-01-15T10:00:00Z")
-    private val fixedUuid = UUID.fromString("00000000-0000-0000-0000-000000000001")
+    private val fixedEventUuid = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
 
     @Test
     fun `should return Right(Wallet) when persistence is successful`() {
@@ -58,7 +58,7 @@ class WalletApplicationServiceTest {
       mockSuccessfulPersistence(expectedVersion)
       // 🪄 Magic: Freeze time and UUID
       given(clock.now()).willReturn(fixedTime)
-      given(idGenerator.generate()).willReturn(fixedUuid)
+      given(idGenerator.generate()).willReturn(fixedEventUuid)
 
       // When
       val actualResult =
@@ -88,7 +88,7 @@ class WalletApplicationServiceTest {
       val expectedErrorMessage = "Persistence failed"
       mockFailurePersistence(WalletException(expectedErrorMessage))
       given(clock.now()).willReturn(fixedTime)
-      given(idGenerator.generate()).willReturn(fixedUuid)
+      given(idGenerator.generate()).willReturn(fixedEventUuid)
 
       // When
       val actualResult =
