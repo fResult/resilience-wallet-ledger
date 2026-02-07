@@ -32,24 +32,24 @@ import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.mock
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.OptimisticLockingFailureException
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 
 class WalletPersistenceAdapterTest {
+  companion object {
+    private val mapper = JsonMapper.builder().findAndAddModules().build()
+  }
+
   private val walletRepository = mock(SpringDataWalletRepository::class.java)
   private val outboxRepository = mock(SpringDataOutboxRepository::class.java)
-  private val mapper = mock(ObjectMapper::class.java)
   private val clock = mock(Clock::class.java)
   private val adapter = WalletPersistenceAdapter(walletRepository, outboxRepository, mapper, clock)
 
-  private val neededMapper = JsonMapper.builder().findAndAddModules().build()
   private val mockEventId = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
   private val mockWalletId = WalletId(UUID.fromString("019c0887-990e-7c44-842e-e6cb2f53d5ac"))
   private val mockOwnerId = OwnerId(UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a"))
@@ -153,7 +153,6 @@ class WalletPersistenceAdapterTest {
     given(
       outboxRepository.saveAll(any<List<WalletOutboxEntity>>()),
     ).willReturn(Flux.just(expectedOutbox))
-    given(mapper.readValue(any<String>(), eq(WalletCreated::class.java))).willReturn(expectedEvent)
 
     // When
     val response = adapter.save(wallet to events)
@@ -339,7 +338,7 @@ class WalletPersistenceAdapterTest {
     walletId = walletEntity.id,
     version = 1,
     eventType = walletEvent.javaClass.simpleName,
-    payload = Json.of(neededMapper.writeValueAsString(walletEvent)),
+    payload = Json.of(mapper.writeValueAsString(walletEvent)),
     occurredOn = walletEvent.occurredOn,
   )
 }
