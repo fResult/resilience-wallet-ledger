@@ -4,6 +4,7 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.WithdrawalCommand
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
 import java.time.Instant
@@ -24,17 +25,28 @@ class WalletTest {
   @Test
   fun `deposit with positive amount should succeed and increase balance`() {
     // Given
-    val initialWallet = createActiveUsdWallet(1000)
-    val expectedResult = initialWallet.copy(balance = usd(1100))
+    val initialBalance = usd(1000)
     val depositAmount = usd(100)
+    val expectedBalance = initialBalance + depositAmount
+    val initialWallet = createActiveWallet(initialBalance)
     val depositCommand = createDepositCommand(depositAmount, Instant.now())
+    val expectedEvent =
+      MoneyDeposited(
+        fixedEventUuid,
+        depositCommand.amount,
+        expectedBalance,
+        fixedIdempotencyKey.toString(),
+        depositCommand.occurredOn,
+      )
+    val expectedWallet = initialWallet.copy(balance = expectedBalance)
 
     // When
     val result = initialWallet.deposit(depositCommand)
 
     // Then
-    val actualResult = result.expectRight("Deposit should succeed")
-    assertEquals(expectedResult, actualResult)
+    val (actualWallet, actualEvents) = result.expectRight("Deposit should succeed")
+    assertEquals(expectedWallet, actualWallet)
+    assertEquals(listOf(expectedEvent), actualEvents)
   }
 
   @Test
