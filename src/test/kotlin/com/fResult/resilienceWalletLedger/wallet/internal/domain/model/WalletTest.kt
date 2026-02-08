@@ -5,6 +5,7 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.WithdrawalCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyWithdrawn
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
 import java.time.Instant
@@ -54,7 +55,7 @@ class WalletTest {
     // Given
     val expectedErrorMessage =
       "Currency mismatch! Cannot deposit [${Currency.THB}] to [${Currency.USD}]"
-    val initialWallet = createActiveUsdWallet(100)
+    val initialWallet = createActiveUsdWallet(300)
     val depositAmount = thb(1000)
     val depositCommand = createDepositCommand(depositAmount, Instant.now())
 
@@ -102,17 +103,28 @@ class WalletTest {
   @Test
   fun `withdraw with positive amount should succeed and decrease balance`() {
     // Given
-    val initialWallet = createActiveUsdWallet(1000)
-    val expectedResult = initialWallet.copy(balance = usd(900))
+    val initialBalance = usd(1000)
     val withdrawalAmount = usd(100)
     val withdrawalCommand = createWithdrawalCommand(withdrawalAmount, Instant.now())
+    val initialWallet = createActiveWallet(initialBalance)
+    val expectedBalance = initialBalance - withdrawalAmount
+    val expectedWallet = initialWallet.copy(balance = expectedBalance)
+    val expectedEvent =
+      MoneyWithdrawn(
+        fixedEventUuid,
+        withdrawalAmount,
+        expectedBalance,
+        fixedIdempotencyKey.toString(),
+        withdrawalCommand.occurredOn,
+      )
 
     // When
     val result = initialWallet.withdraw(withdrawalCommand)
 
     // Then
-    val actualResult = result.expectRight("Withdrawal should succeed")
-    assertEquals(expectedResult, actualResult)
+    val (actualWallet, actualEvents) = result.expectRight("Withdrawal should succeed")
+    assertEquals(expectedWallet, actualWallet)
+    assertEquals(listOf(expectedEvent), actualEvents)
   }
 
   @Test
