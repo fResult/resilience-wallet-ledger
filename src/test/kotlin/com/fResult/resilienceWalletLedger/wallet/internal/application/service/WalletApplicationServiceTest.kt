@@ -13,6 +13,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletWithEvents
 import io.vavr.control.Either
 import java.math.BigDecimal
 import java.time.Instant
@@ -48,14 +49,14 @@ class WalletApplicationServiceTest {
     private val expectedOwnerId = OwnerId(UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a"))
     private val expectedWalletName = "My Wallet"
     private val expectedBalance = Money(BigDecimal.ZERO, Currency.JPY)
-    private val expectedVersion = 1L
+    private val expectedVersion = 1
     private val fixedTime = Instant.parse("2026-01-15T10:00:00Z")
     private val fixedEventUuid = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
 
     @Test
     fun `should return Right(Wallet) when persistence is successful`() {
       // Given
-      mockSuccessfulPersistence(expectedVersion)
+      mockSuccessfulPersistenceWithVersion(expectedVersion)
       // 🪄 Magic: Freeze time and UUID
       given(clock.now()).willReturn(fixedTime)
       given(idGenerator.generate()).willReturn(fixedEventUuid)
@@ -77,7 +78,7 @@ class WalletApplicationServiceTest {
           assertEquals(expectedOwnerId, createdWallet.ownerId)
           assertEquals(expectedWalletName, createdWallet.name)
           assertEquals(expectedBalance, createdWallet.balance)
-          assertEquals(expectedVersion, createdWallet.version)
+          assertEquals(expectedVersion.toLong(), createdWallet.version)
           assertEquals(fixedTime, createdWallet.createdAt)
         }.verifyComplete()
     }
@@ -122,14 +123,18 @@ class WalletApplicationServiceTest {
       val walletId = WalletId(walletUuid)
       val ownerId = OwnerId(ownerUuid)
       val initialBalance = thb(1500)
-      val initialVersion = 3L
+      val initialVersion = 3
       val amountToDeposit = thb(500)
       val expectedBalance = initialBalance + amountToDeposit
-      val expectedVersion = 4L
+      val expectedVersion = 4
       val command =
         CreateWalletCommand(walletId, ownerId, "My Wallet", Currency.THB, fixedEventUuid, fixedTime)
       val (newWallet, events) = Wallet.create(command)
-      val existingWallet = newWallet.copy(balance = initialBalance, version = initialVersion)
+      val existingWallet =
+        newWallet.copy(
+          balance = initialBalance,
+          version = initialVersion.toLong(),
+        )
 
       given(
         walletRepository.findById(existingWallet.id),
@@ -138,19 +143,7 @@ class WalletApplicationServiceTest {
       given(idGenerator.generate()).willReturn(fixedEventUuid)
       given(clock.now()).willReturn(fixedTime)
 
-      given(
-        walletRepository.save(any<Pair<Wallet, List<WalletEvent>>>()),
-      ).willAnswer { invocation ->
-        val (walletBeingDeposited, events) =
-          invocation
-            .getArgument<Pair<Wallet, List<WalletEvent>>>(
-              0,
-            )
-        val depositedWallet = walletBeingDeposited.copy(version = walletBeingDeposited.version + 1)
-        Mono.just(
-          Either.right<WalletException, Pair<Wallet, List<WalletEvent>>>(depositedWallet to events),
-        )
-      }
+      mockSuccessfulPersistenceWithVersion(expectedVersion)
 
       // When
       val actualResult =
@@ -171,17 +164,19 @@ class WalletApplicationServiceTest {
             actualResult.balance,
             "Balance should be ${amountToDeposit.amount}",
           )
-          assertEquals(expectedVersion, actualResult.version, "Version should increment")
+          assertEquals(expectedVersion.toLong(), actualResult.version, "Version should increment")
         }.verifyComplete()
     }
   }
 
-  private fun mockSuccessfulPersistence(version: Long = 1L) {
+  private fun mockSuccessfulPersistenceWithVersion(version: Int = 1) {
     given(walletRepository.save(any<Pair<Wallet, List<WalletEvent>>>()))
       .willAnswer { invocation ->
-        val walletToCreated = invocation.getArgument<Wallet>(0)
-        val createdWallet = walletToCreated.copy(version = version)
-        Mono.just(Either.right<WalletException, Wallet>(createdWallet))
+        val (walletToCreated, events) = invocation.getArgument<Pair<Wallet, List<WalletEvent>>>(0)
+        val createdWallet = walletToCreated.copy(version = version.toLong())
+        val walletWithEvents = WalletWithEvents(createdWallet to events)
+
+        Mono.just(Either.right<WalletException, WalletWithEvents>(walletWithEvents))
       }
   }
 
