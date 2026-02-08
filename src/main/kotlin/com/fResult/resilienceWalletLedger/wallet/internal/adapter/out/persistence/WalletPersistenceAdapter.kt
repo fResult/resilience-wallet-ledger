@@ -52,7 +52,7 @@ class WalletPersistenceAdapter(
         WalletNotFoundException("Wallet with ID ${id.value} not found")
       }
 
-  override fun save(data: Pair<Wallet, List<WalletEvent>>): Mono<WalletResult<WalletWithEvents>> {
+  override fun save(data: WalletWithEvents): Mono<WalletResult<WalletWithEvents>> {
     val (wallet, events) = data
 
     return wallet

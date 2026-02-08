@@ -14,6 +14,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletResult
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletWithEvents
 import io.vavr.control.Either
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -45,7 +46,7 @@ class WalletApplicationService(
     val (wallet, events) = Wallet.create(createWalletCommand)
 
     return walletRepository
-      .save(wallet to events)
+      .save(WalletWithEvents(wallet to events))
       .map { result ->
         /* Design note:
          * Publish domain events to notify other systems that a wallet was created
@@ -102,7 +103,7 @@ class WalletApplicationService(
         },
         { (walletToDeposit, events) ->
           walletRepository
-            .save(walletToDeposit to events)
+            .save(WalletWithEvents(walletToDeposit to events))
             .map { result ->
               result.map { (depositedWallet, _) -> depositedWallet }
             }
@@ -128,7 +129,7 @@ class WalletApplicationService(
           },
           { (walletToWithdraw, events) ->
             walletRepository
-              .save(walletToWithdraw to events)
+              .save(WalletWithEvents(walletToWithdraw to events))
               .map { result ->
                 result.map { (withdrawnWallet, _) -> withdrawnWallet }
               }

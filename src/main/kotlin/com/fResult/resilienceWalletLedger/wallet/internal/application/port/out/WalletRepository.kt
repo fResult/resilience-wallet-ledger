@@ -1,6 +1,5 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.application.port.out
 
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
@@ -12,5 +11,5 @@ import reactor.core.publisher.Mono
 interface WalletRepository {
   fun findById(id: WalletId): Mono<Either<WalletException, Wallet>>
 
-  fun save(data: Pair<Wallet, List<WalletEvent>>): Mono<WalletResult<WalletWithEvents>>
+  fun save(data: WalletWithEvents): Mono<WalletResult<WalletWithEvents>>
 }
