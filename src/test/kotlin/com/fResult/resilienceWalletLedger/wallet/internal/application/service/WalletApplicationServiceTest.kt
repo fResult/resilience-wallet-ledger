@@ -170,7 +170,7 @@ class WalletApplicationServiceTest {
   }
 
   private fun mockSuccessfulPersistenceWithVersion(version: Int = 1) {
-    given(walletRepository.save(any<Pair<Wallet, List<WalletEvent>>>()))
+    given(walletRepository.save(any<WalletWithEvents>()))
       .willAnswer { invocation ->
         val (walletToCreated, events) = invocation.getArgument<Pair<Wallet, List<WalletEvent>>>(0)
         val createdWallet = walletToCreated.copy(version = version.toLong())
@@ -181,7 +181,7 @@ class WalletApplicationServiceTest {
   }
 
   private fun mockFailurePersistence(cause: WalletException) {
-    given(walletRepository.save(any<Pair<Wallet, List<WalletEvent>>>()))
+    given(walletRepository.save(any<WalletWithEvents>()))
       .willReturn(Mono.just(Either.left(cause)))
   }
 

@@ -21,6 +21,7 @@ import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.OwnerId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Wallet
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletId
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletStatus
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.WalletWithEvents
 import io.r2dbc.postgresql.codec.Json
 import java.math.BigDecimal
 import java.time.Instant
@@ -158,7 +159,7 @@ class WalletPersistenceAdapterTest {
     ).willReturn(Flux.just(expectedOutbox))
 
     // When
-    val response = adapter.save(wallet to events)
+    val response = adapter.save(WalletWithEvents(wallet, events))
 
     // Then
     StepVerifier
@@ -199,7 +200,7 @@ class WalletPersistenceAdapterTest {
     ).willReturn(Mono.error(RuntimeException("DB Error")))
 
     // When
-    val actualResult = adapter.save(wallet to events)
+    val actualResult = adapter.save(WalletWithEvents(wallet, events))
 
     // Then
     StepVerifier
@@ -222,7 +223,7 @@ class WalletPersistenceAdapterTest {
     ).willReturn(Mono.error(DuplicateKeyException(errorMessage)))
 
     // When
-    val actualResult = adapter.save(wallet to events)
+    val actualResult = adapter.save(WalletWithEvents(wallet, events))
 
     // Then
     StepVerifier
@@ -245,7 +246,7 @@ class WalletPersistenceAdapterTest {
     ).willReturn(Mono.error(OptimisticLockingFailureException("Version mismatch")))
 
     // When
-    val actualResult = adapter.save(wallet to events)
+    val actualResult = adapter.save(WalletWithEvents(wallet to events))
 
     // Then
     StepVerifier
@@ -273,7 +274,7 @@ class WalletPersistenceAdapterTest {
     ).willReturn(Mono.error(DataIntegrityViolationException(dbErrorMessage)))
 
     // When
-    val actualResult = adapter.save(wallet to events)
+    val actualResult = adapter.save(WalletWithEvents(wallet to events))
 
     // Then
     StepVerifier
@@ -294,7 +295,7 @@ class WalletPersistenceAdapterTest {
     given(walletRepository.save(any<WalletEntity>())).willReturn(Mono.empty())
 
     // When
-    val actualResult = adapter.save(wallet to events)
+    val actualResult = adapter.save(WalletWithEvents(wallet to events))
 
     // Then
     StepVerifier
