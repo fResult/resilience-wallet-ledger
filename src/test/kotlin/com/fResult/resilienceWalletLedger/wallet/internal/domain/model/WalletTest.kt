@@ -2,10 +2,12 @@ package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
 import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.DepositCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.WithdrawalCommand
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyWithdrawn
+import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletBalanceInsufficientException
 import java.math.BigDecimal
 import java.time.Instant
@@ -16,12 +18,34 @@ import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 
 class WalletTest {
+  private val walletName = "Test Wallet"
   private val walletId = WalletId(UUID.fromString("019c0887-990e-7c44-842e-e6cb2f53d5ac"))
   private val ownerId = OwnerId(UUID.fromString("019c088e-6a14-7d23-837c-ca3b05033a0a"))
   private val linkedBankAccountId =
     BankAccountId(UUID.fromString("019c29c5-fda1-7d56-b290-ed0c4afbeeb8"))
   private val fixedEventUuid = UUID.fromString("019c088a-f22e-7009-9e51-9694ea8cbfa8")
   private val fixedIdempotencyKey = UUID.fromString("019c088d-9968-7e1f-9a93-01a0b5d02d98")
+
+  @Test
+  fun `create wallet should succeed`() {
+    // Given
+    val now = Instant.now()
+    val createWalletCommand =
+      CreateWalletCommand(walletId, ownerId, walletName, Currency.JPY, fixedEventUuid, now)
+    val expectedWallet =
+      createActiveWallet(
+        balance = Money.zero(Currency.JPY),
+        linkedBankAccountId = null,
+      ).copy(createdAt = now)
+    val expectedEvent = createWalletCreatedEvent(walletName, now)
+
+    // When
+    val (actualCreatedWallet, actualEvents) = Wallet.create(createWalletCommand)
+
+    // Then
+    assertEquals(expectedWallet, actualCreatedWallet)
+    assertEquals(listOf(expectedEvent), actualEvents)
+  }
 
   @Test
   fun `deposit with positive amount should succeed and increase balance`() {
@@ -211,17 +235,32 @@ class WalletTest {
     occurredOn: Instant,
   ) = WithdrawalCommand(amount, fixedIdempotencyKey.toString(), fixedEventUuid, occurredOn)
 
-  private fun createActiveWallet(balance: Money) =
-    Wallet(
-      id = walletId,
-      name = "Test Wallet",
-      balance = balance,
-      linkedBankAccountId = linkedBankAccountId,
-      ownerId = ownerId,
-      status = WalletStatus.ACTIVE,
-      createdAt = Instant.now(),
-      version = 0,
-    )
+  private fun createActiveWallet(
+    balance: Money,
+    linkedBankAccountId: BankAccountId? = this.linkedBankAccountId,
+  ) = Wallet(
+    id = walletId,
+    name = walletName,
+    balance = balance,
+    linkedBankAccountId = linkedBankAccountId,
+    ownerId = ownerId,
+    status = WalletStatus.ACTIVE,
+    createdAt = Instant.now(),
+    version = 0,
+  )
+
+  private fun createWalletCreatedEvent(
+    walletName: String,
+    now: Instant,
+  ) = WalletCreated(
+    fixedEventUuid,
+    walletId,
+    ownerId,
+    null,
+    walletName,
+    Money.zero(Currency.JPY),
+    now,
+  )
 
   private fun usd(amount: Int): Money = Money(BigDecimal(amount), Currency.USD)
 
