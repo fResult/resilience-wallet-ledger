@@ -6,7 +6,6 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.command.CreateWalletCommand
-import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.exception.WalletException
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Currency
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.model.Money
@@ -172,7 +171,7 @@ class WalletApplicationServiceTest {
   private fun mockSuccessfulPersistenceWithVersion(version: Int = 1) {
     given(walletRepository.save(any<WalletWithEvents>()))
       .willAnswer { invocation ->
-        val (walletToCreated, events) = invocation.getArgument<Pair<Wallet, List<WalletEvent>>>(0)
+        val (walletToCreated, events) = invocation.getArgument<WalletWithEvents>(0)
         val createdWallet = walletToCreated.copy(version = version.toLong())
         val walletWithEvents = WalletWithEvents(createdWallet to events)
 
