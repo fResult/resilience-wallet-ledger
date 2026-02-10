@@ -27,7 +27,7 @@ class WalletTest {
   private val fixedIdempotencyKey = UUID.fromString("019c088d-9968-7e1f-9a93-01a0b5d02d98")
 
   @Test
-  fun `create wallet should succeed`() {
+  fun `create wallet should succeed and generate event`() {
     // Given
     val now = Instant.now()
     val createWalletCommand =
