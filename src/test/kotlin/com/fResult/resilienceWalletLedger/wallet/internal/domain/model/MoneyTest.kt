@@ -1,5 +1,6 @@
 package com.fResult.resilienceWalletLedger.wallet.internal.domain.model
 
+import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import java.math.BigDecimal
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -50,17 +51,17 @@ class MoneyTest {
   }
 
   @Test
-  fun `Money#of factory should throw exception when amount is negative`() {
+  fun `Money#of factory should reject negative amount`() {
     // Given
     val invalidAmount = -1
     val expectedErrorMessage = "Currency cannot be smaller than zero, but got $invalidAmount"
 
     // When
-    val executable: () -> Unit = { Money.of(BigDecimal(invalidAmount), Currency.JPY) }
+    val actualResult = Money.of(BigDecimal(invalidAmount), Currency.JPY)
 
     // Then
-    val actualException = assertThrows<IllegalArgumentException>(executable)
-    assertEquals(expectedErrorMessage, actualException.message)
+    val actualError = actualResult.expectLeft("Create money should fail")
+    assertEquals(expectedErrorMessage, actualError.message)
   }
 
   private fun jpy(amount: Int): Money = Money(BigDecimal(amount), Currency.JPY)
