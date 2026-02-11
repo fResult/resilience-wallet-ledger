@@ -28,14 +28,14 @@ class MoneyTest {
   fun `should throw exception when created with negative amount`() {
     // Given
     val invalidAmount = -1
-    val expectedErrorMessage = "Currency cannot be smaller than zero, but got $invalidAmount"
+    val expectedErrorMessage = "Money amount must be non-negative, but got: $invalidAmount"
 
     // When
-    val executable: () -> Unit = { jpy(invalidAmount) }
+    val actualResult: () -> Unit = { jpy(invalidAmount) }
 
     // Then
-    val actualException = assertThrows<IllegalArgumentException>(executable)
-    assertEquals(expectedErrorMessage, actualException.message)
+    val actualError = assertThrows<IllegalArgumentException>(actualResult)
+    assertEquals(expectedErrorMessage, actualError.message)
   }
 
   @Test
