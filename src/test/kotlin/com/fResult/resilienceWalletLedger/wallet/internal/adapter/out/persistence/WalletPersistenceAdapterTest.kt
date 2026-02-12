@@ -6,7 +6,7 @@ import com.fResult.resilienceWalletLedger.common.fixtures.expectLeft
 import com.fResult.resilienceWalletLedger.common.fixtures.expectRight
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletOutboxEntity
-import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataOutboxRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletOutboxRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletCreated
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.WalletEvent
@@ -47,7 +47,7 @@ class WalletPersistenceAdapterTest {
   }
 
   private val walletRepository = mock(SpringDataWalletRepository::class.java)
-  private val outboxRepository = mock(SpringDataOutboxRepository::class.java)
+  private val outboxRepository = mock(SpringDataWalletOutboxRepository::class.java)
   private val clock = mock(Clock::class.java)
   private val adapter = WalletPersistenceAdapter(walletRepository, outboxRepository, mapper, clock)
 

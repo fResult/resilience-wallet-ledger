@@ -7,7 +7,7 @@ import com.fResult.resilienceWalletLedger.common.extension.commandToEither
 import com.fResult.resilienceWalletLedger.common.extension.queryToEither
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletEntity
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.entity.WalletOutboxEntity
-import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataOutboxRepository
+import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletOutboxRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistence.repository.SpringDataWalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.application.port.out.WalletRepository
 import com.fResult.resilienceWalletLedger.wallet.internal.domain.event.MoneyDeposited
@@ -40,7 +40,7 @@ import tools.jackson.databind.ObjectMapper
 @PersistenceAdapter
 class WalletPersistenceAdapter(
   private val walletRepository: SpringDataWalletRepository,
-  private val outboxRepository: SpringDataOutboxRepository,
+  private val outboxRepository: SpringDataWalletOutboxRepository,
   private val mapper: ObjectMapper,
   private val clock: Clock,
 ) : WalletRepository {

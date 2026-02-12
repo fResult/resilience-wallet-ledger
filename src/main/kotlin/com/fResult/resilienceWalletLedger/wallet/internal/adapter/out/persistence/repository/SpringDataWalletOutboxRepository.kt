@@ -4,4 +4,4 @@ import com.fResult.resilienceWalletLedger.wallet.internal.adapter.out.persistenc
 import java.util.UUID
 import org.springframework.data.r2dbc.repository.R2dbcRepository
 
-interface SpringDataOutboxRepository : R2dbcRepository<WalletOutboxEntity, UUID>
+interface SpringDataWalletOutboxRepository : R2dbcRepository<WalletOutboxEntity, UUID>
