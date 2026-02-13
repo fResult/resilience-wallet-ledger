@@ -251,14 +251,60 @@ The server will start on port `8080` (Default).
 This project is tested heavily.\
 It uses Unit and Integration Tests.
 
-> [!note]
+> [!IMPORTANT]
 >
-> Integration Tests utilize **Testcontainers**, which requires a running Docker environment.
+> **Integration Tests** utilize **Testcontainers**, which requires a running Docker environment.\
+> If you use **Colima**, ensure it is running (`colima start`) before executing tests.
+
+### 🔧 CLI (Terminal)
+
+#### Standard Run
 
 ```bash
-# Run all tests
 ./gradlew test
 ```
+
+#### For Colima Users
+
+> ⚠️ Note: Requires jq installed (brew install jq).
+
+> FIXME: Fix this test command as can't run correctly.
+
+```bash
+./gradlew --stop &&
+# Verify Colima is running and pass the socket/host explicitly
+TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock \
+  TESTCONTAINERS_HOST_OVERRIDE=$(colima ls -j | jq -r '.address') \
+  DOCKER_HOST="unix://$HOME/.colima/default/docker.sock" \
+  ./gradlew test
+```
+
+### 🔧 IDE Configuration (IntelliJ IDEA) recommended
+
+For a faster feedback loop and seamless `.env` file support, we recommend switching the test runner from Gradle to IntelliJ.
+
+#### 1. Switch Test Runner to IntelliJ
+
+This avoids Gradle daemon overhead for local testing.
+1. Open **Settings** (or Preferences on macOS)
+2. Go to `Build, Execution, Deployment` > `Build Tools` > `Gradle`
+3. Change **Run tests using** from *Gradle* to **IntelliJ IDEA**
+
+#### 2. Configure EnvFile Support (Global Template)
+
+To ensure Testcontainers picks up environment variables automatically for every new test:
+1. Open **Run/Debug Configurations** (top right toolbar)
+2. Click **Edit Configuration Templates...** (bottom left link in the dialog)
+3. Select **JUnit** from the list
+4. Enable the **EnvFile** tab (install the plugin if missing)
+5. Check `Enable EnvFile`
+6. Click `+` and attach your `.env` file
+7. Click **Apply/OK**
+
+> [!TIP]
+> 
+> Why do this?\
+> The Native IntelliJ Runner is significantly faster for repeated test execution and the EnvFile plugin allows you to inject local Docker/Colima configurations without messy command-line arguments.
 
 ## 🧹 Code Style & Hygiene
 
