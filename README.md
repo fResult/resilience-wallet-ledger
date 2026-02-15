@@ -281,6 +281,12 @@ TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock \
 
 ### 🔧 IDE Configuration (IntelliJ IDEA) recommended
 
+> [!tip]
+>
+> **Need a visual guide?**\
+> Check out my step-by-step article with screenshots on Medium:\
+> [Fix .env File Not Loaded in IntelliJ Tests](https://medium.com/p/b5beaae0a96d)
+
 For a faster feedback loop and seamless `.env` file support, we recommend switching the test runner from Gradle to IntelliJ.
 
 #### 1. Switch Test Runner to IntelliJ
