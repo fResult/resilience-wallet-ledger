@@ -165,7 +165,7 @@ class WalletPersistenceAdapter(
             ex,
           )
 
-        else -> WalletException("Unexpected System Error", ex)
+        else -> WalletException("Unexpected System Error: ${ex.message}", ex)
       }
     }
 }

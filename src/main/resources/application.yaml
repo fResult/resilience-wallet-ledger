@@ -19,7 +19,7 @@ spring:
   flyway:
     enabled: true
     url: jdbc:postgresql://localhost:5432/wallet_db
-    user: ${app.db.username}
-    password: ${app.db.password}
+    user: ${app.wallet-db.username}
+    password: ${app.wallet-db.password}
     locations:
       - classpath:db/migration
