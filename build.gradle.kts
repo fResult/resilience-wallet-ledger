@@ -1,7 +1,7 @@
 plugins {
   kotlin("jvm") version "2.2.21"
   kotlin("plugin.spring") version "2.2.21"
-  id("org.springframework.boot") version "4.0.1"
+  id("org.springframework.boot") version "4.0.4"
   id("io.spring.dependency-management") version "1.1.7"
   id("com.diffplug.spotless") version "8.1.0"
 }
@@ -84,7 +84,7 @@ tasks.register("installGitHooks") {
     val script =
       $$"""
       #!/bin/sh
-      
+
       STAGED_FILES=$(git diff --name-only --cached --diff-filter=ACMR | grep -E "\.kt\$|\.kts\$")
       echo "Staged Files:\n $STAGED_FILES"
 
