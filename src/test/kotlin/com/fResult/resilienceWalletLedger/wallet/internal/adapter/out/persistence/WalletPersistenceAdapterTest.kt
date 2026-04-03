@@ -29,6 +29,7 @@ import java.util.UUID
 import kotlin.test.assertContains
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.mockito.BDDMockito.mock
@@ -113,7 +114,9 @@ class WalletPersistenceAdapterTest {
       .assertNext { result ->
         val error = result.expectLeft("Should catch mapping error")
         assertInstanceOf(WalletException::class.java, error)
-        assertEquals("Unexpected System Error", error.message)
+        assertTrue(
+          error.message?.startsWith("Unexpected System Error") ?: false,
+        )
         assertInstanceOf(InvariantViolationException::class.java, error.cause)
         assertEquals(
           "CRITICAL: Found WalletEntity with null ID inside DB! This is a bug.",

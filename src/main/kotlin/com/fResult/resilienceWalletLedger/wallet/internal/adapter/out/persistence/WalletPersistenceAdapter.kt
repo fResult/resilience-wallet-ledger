@@ -48,19 +48,20 @@ class WalletPersistenceAdapter(
     walletRepository
       .findById(id.value)
       .map(::toDomain)
-      .queryToEither(translatePersistenceError(id.value)) {
-        WalletNotFoundException("Wallet with ID ${id.value} not found")
-      }
+      .queryToEither(
+        onError = translatePersistenceError(id.value),
+        onEmpty = { WalletNotFoundException("Wallet with ID ${id.value} not found") },
+      )
 
   override fun save(data: WalletWithEvents): Mono<WalletResult<WalletWithEvents>> {
     val (wallet, events) = data
 
     return wallet
-      .let(::toEntity)
+      .let(toWalletEntity(updatedAt = clock.now()))
       .let(walletRepository::save)
       .switchIfEmpty(Mono.defer { Mono.error(WalletException("Save returned empty")) })
       .zipWhen(recordEvents(events), ::toWalletWithEvents)
-      .commandToEither(translatePersistenceError(wallet.id.value))
+      .commandToEither(onError = translatePersistenceError(wallet.id.value))
   }
 
   private fun toWalletWithEvents(
@@ -100,20 +101,22 @@ class WalletPersistenceAdapter(
       version = entity.version ?: 0L,
     )
 
-  private fun toEntity(domain: Wallet): WalletEntity =
-    WalletEntity(
-      _id = domain.id.value,
-      name = domain.name,
-      balanceAmount = domain.balance.amount,
-      balanceCurrency = domain.balance.currency.name,
-      linkedBankAccountId = domain.linkedBankAccountId?.value,
-      ownerId = domain.ownerId.value,
-      status = domain.status.name,
-      // version is `null` for new entity (Optimistic Lock)
-      version = if (domain.version == 0L) null else domain.version,
-      createdAt = domain.createdAt,
-      updatedAt = clock.now(),
-    )
+  private fun toWalletEntity(updatedAt: Instant): (Wallet) -> WalletEntity =
+    { domain ->
+      WalletEntity(
+        _id = domain.id.value,
+        name = domain.name,
+        balanceAmount = domain.balance.amount,
+        balanceCurrency = domain.balance.currency.name,
+        linkedBankAccountId = domain.linkedBankAccountId?.value,
+        ownerId = domain.ownerId.value,
+        status = domain.status.name,
+        // version is `null` for the new entity (Optimistic Lock)
+        version = if (domain.version == 0L) null else domain.version,
+        createdAt = domain.createdAt,
+        updatedAt = updatedAt,
+      )
+    }
 
   private fun outboxEntryFor(walletEntity: WalletEntity): (WalletEvent) -> WalletOutboxEntity =
     { event ->
@@ -129,43 +132,53 @@ class WalletPersistenceAdapter(
 
   private fun toDomainEvent(outboxEntity: WalletOutboxEntity): WalletEvent =
     when (outboxEntity.eventType) {
-      WalletCreated::class.simpleName ->
+      WalletCreated::class.simpleName -> {
         mapper.readValue(
           outboxEntity.payload.asString(),
           WalletCreated::class.java,
         )
+      }
 
-      MoneyDeposited::class.simpleName ->
+      MoneyDeposited::class.simpleName -> {
         mapper.readValue(
           outboxEntity.payload.asString(),
           MoneyDeposited::class.java,
         )
+      }
 
-      MoneyWithdrawn::class.simpleName ->
+      MoneyWithdrawn::class.simpleName -> {
         mapper.readValue(
           outboxEntity.payload.asString(),
           MoneyWithdrawn::class.java,
         )
+      }
 
-      else -> throw WalletException("Unknown event type: ${outboxEntity.eventType}")
+      else -> {
+        throw WalletException("Unknown event type: ${outboxEntity.eventType}")
+      }
     }
 
   private fun translatePersistenceError(id: UUID): (Throwable) -> WalletException =
     { ex ->
       when (ex) {
-        is DuplicateKeyException ->
+        is DuplicateKeyException -> {
           WalletAlreadyExistsException("Wallet with ID [$id] already existed", ex)
+        }
 
-        is DataIntegrityViolationException ->
+        is DataIntegrityViolationException -> {
           WalletException("Data Integrity Violation: ${ex.message}", ex)
+        }
 
-        is OptimisticLockingFailureException ->
+        is OptimisticLockingFailureException -> {
           WalletConcurrencyException(
             "Wallet with ID [$id] has been modified by another transaction",
             ex,
           )
+        }
 
-        else -> WalletException("Unexpected System Error: ${ex.message}", ex)
+        else -> {
+          WalletException("Unexpected System Error: ${ex.message}", ex)
+        }
       }
     }
 }
