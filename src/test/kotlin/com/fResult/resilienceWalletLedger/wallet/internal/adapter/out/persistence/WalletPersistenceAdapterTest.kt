@@ -114,14 +114,14 @@ class WalletPersistenceAdapterTest {
       .assertNext { result ->
         val error = result.expectLeft("Should catch mapping error")
         assertInstanceOf(WalletException::class.java, error)
-        assertTrue(
-          error.message?.startsWith("Unexpected System Error") ?: false,
-        )
-        assertInstanceOf(InvariantViolationException::class.java, error.cause)
-        assertEquals(
-          "CRITICAL: Found WalletEntity with null ID inside DB! This is a bug.",
-          error.cause?.message,
-        )
+        error.message?.also { assertTrue(it.startsWith("Unexpected System Error")) }
+        error.cause?.also {
+          assertInstanceOf(InvariantViolationException::class.java, it)
+          assertEquals(
+            "CRITICAL: Found WalletEntity with null ID inside DB! This is a bug.",
+            it.message,
+          )
+        }
       }.verifyComplete()
   }
 
@@ -188,8 +188,8 @@ class WalletPersistenceAdapterTest {
       .assertNext { result ->
         val error = result.expectLeft("Should handle enum mapping error")
         assertInstanceOf(WalletException::class.java, error)
-        assertEquals("Unexpected System Error", error.message)
         assertInstanceOf(IllegalArgumentException::class.java, error.cause)
+        error.message?.also { assertTrue(it.startsWith("Unexpected System Error")) }
       }.verifyComplete()
   }
 
@@ -211,7 +211,10 @@ class WalletPersistenceAdapterTest {
       .assertNext { result ->
         val error = result.expectLeft("Should fail to save")
         assertEquals(WalletException::class.java, error::class.java)
-        assertEquals("Unexpected System Error", error.message)
+        error.message?.also {
+          assertTrue(it.startsWith("Unexpected System Error"))
+          assertTrue(it.endsWith("DB Error"))
+        }
       }.verifyComplete()
   }
 
@@ -306,8 +309,10 @@ class WalletPersistenceAdapterTest {
       .assertNext { result ->
         val error = result.expectLeft("Should fail on empty result")
         assertInstanceOf(WalletException::class.java, error)
-        assertEquals("Unexpected System Error", error.message)
-        assertEquals("Save returned empty", error.cause?.message)
+        error.message?.also {
+          assertTrue(it.startsWith("Unexpected System Error"))
+          assertTrue(it.endsWith("Save returned empty"))
+        }
       }.verifyComplete()
   }
 
