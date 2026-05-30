@@ -1,9 +1,9 @@
 plugins {
   kotlin("jvm") version "2.2.21"
   kotlin("plugin.spring") version "2.2.21"
-  id("org.springframework.boot") version "4.0.4"
+  id("org.springframework.boot") version "4.0.5"
   id("io.spring.dependency-management") version "1.1.7"
-  id("com.diffplug.spotless") version "8.1.0"
+  id("com.diffplug.spotless") version "8.4.0"
 }
 
 group = "com.fResult"
@@ -14,7 +14,7 @@ java { toolchain { languageVersion = JavaLanguageVersion.of(24) } }
 
 repositories { mavenCentral() }
 
-val vavrVersion = "0.11.0"
+val vavrVersion = "1.0.1"
 val uuidGeneratorVersion = "5.2.0"
 val mockitoKotlinVersion = "6.1.0"
 val testcontainersVersion = "2.0.3"
@@ -28,7 +28,6 @@ dependencies {
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("tools.jackson.module:jackson-module-kotlin")
-  // Upgrade to Vavr 1.0.0 if available
   implementation("io.vavr:vavr:$vavrVersion")
   implementation("com.fasterxml.uuid:java-uuid-generator:$uuidGeneratorVersion")
   implementation("org.postgresql:r2dbc-postgresql")
