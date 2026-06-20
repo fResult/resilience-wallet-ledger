@@ -1,9 +1,9 @@
 plugins {
-  kotlin("jvm") version "2.2.21"
+  kotlin("jvm") version "2.3.21"
   kotlin("plugin.spring") version "2.2.21"
-  id("org.springframework.boot") version "4.0.5"
+  id("org.springframework.boot") version "4.1.0"
   id("io.spring.dependency-management") version "1.1.7"
-  id("com.diffplug.spotless") version "8.4.0"
+  id("com.diffplug.spotless") version "8.7.0"
 }
 
 group = "com.fResult"
@@ -16,8 +16,8 @@ repositories { mavenCentral() }
 
 val vavrVersion = "1.0.1"
 val uuidGeneratorVersion = "5.2.0"
-val mockitoKotlinVersion = "6.1.0"
-val testcontainersVersion = "2.0.3"
+val mockitoKotlinVersion = "6.3.0"
+val testcontainersVersion = "2.0.5"
 
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
